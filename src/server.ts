@@ -8,6 +8,7 @@ import { FileRoute } from "@routes/files.routes";
 
 import { CategoryRoute } from "@routes/categories.routes";
 import { ArticleRoute } from "@routes/articles.routes";
+import { CommentRoute } from "./routes/comments.routes";
 
 ValidateEnv();
 
@@ -19,6 +20,7 @@ const app = new App([
 
   new CategoryRoute(),
   new ArticleRoute(),
+  new CommentRoute(),
 ]);
 
 app.listen();

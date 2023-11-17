@@ -28,6 +28,7 @@ export class ArticleModel extends Model<Article, ArticleCreationAttributes> impl
   public readonly author: User;
   public readonly categories: ArticleCategory[];
   public likes: number;
+  public comments: number;
 
   public readonly created_at!: Date;
   public readonly updated_at!: Date;

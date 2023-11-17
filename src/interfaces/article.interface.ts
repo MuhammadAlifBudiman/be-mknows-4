@@ -13,6 +13,7 @@ export interface Article {
 
   categories?: ArticleCategory[];
   likes?: number;
+  comments?: number;
 }
 
 export interface ArticleCategory {
@@ -47,9 +48,20 @@ export interface ArticleParsed {
 
   categories: Category[];
   likes: number;
+  comments: number;
 }
 
 export interface ArticleLike {
   article_id: number;
   user_id: number;
+}
+
+export interface ArticleComment {
+  pk: number;
+  uuid: string;
+
+  article_id: number;
+  author_id: number;
+
+  comment: string;
 }

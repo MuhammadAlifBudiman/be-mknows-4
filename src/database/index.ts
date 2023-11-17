@@ -17,6 +17,7 @@ import CategoryModel from "@models/categories.model";
 import ArticleModel from "@models/articles.model";
 import ArticleCategoryModel from "@models/articles_categories.model";
 import ArticleLikeModel from "@models/articles_likes.model";
+import ArticleCommentModel from "@/models/articles_comments.model";
 
 const sequelize = new Sequelize(
   dbConfig.database as string,
@@ -43,6 +44,7 @@ export const DB = {
   Articles: ArticleModel(sequelize),
   ArticlesCategories: ArticleCategoryModel(sequelize),
   ArticlesLikes: ArticleLikeModel(sequelize),
+  ArticlesComments: ArticleCommentModel(sequelize),
 
   sequelize, // connection instance (RAW queries)
   Sequelize, // library

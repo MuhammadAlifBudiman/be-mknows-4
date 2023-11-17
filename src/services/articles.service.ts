@@ -26,7 +26,8 @@ export class ArticleService {
         avatar: article.author.avatar?.uuid || null, 
       },
       categories: article.categories.map((articleCategory) => articleCategory.category),
-      likes: article.likes || 0
+      likes: article.likes || 0,
+      comments: article.comments || 0
     };
   }
 
@@ -97,6 +98,18 @@ export class ArticleService {
       article.likes = likeCounts[index];
     });
 
+    const commentCountPromises = articles.map(article => {
+      return DB.ArticlesComments.count({
+        where: { article_id: article.pk }
+      });
+    });
+
+    const commentCounts = await Promise.all(commentCountPromises);
+
+    articles.forEach((article, index) => {
+      article.comments = commentCounts[index];
+    });
+
     const pagination: Pagination = {
       current_page: parseInt(page),
       size_page: articles.length,
@@ -122,6 +135,12 @@ export class ArticleService {
     });
         
     article.likes = likesCount;
+
+    const commentsCount = await DB.ArticlesComments.count({
+      where: { article_id: article.pk }
+    });
+
+    article.comments = commentsCount;
 
     const response = this.articleParsed(article);
     return response;
@@ -159,6 +178,18 @@ export class ArticleService {
     
     articles.forEach((article, index) => {
       article.likes = likeCounts[index];
+    });
+
+    const commentCountPromises = articles.map(article => {
+      return DB.ArticlesComments.count({
+        where: { article_id: article.pk }
+      });
+    });
+
+    const commentCounts = await Promise.all(commentCountPromises);
+
+    articles.forEach((article, index) => {
+      article.comments = commentCounts[index];
     });
 
 
