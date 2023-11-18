@@ -55,13 +55,3 @@ export interface ArticleLike {
   article_id: number;
   user_id: number;
 }
-
-export interface ArticleComment {
-  pk: number;
-  uuid: string;
-
-  article_id: number;
-  author_id: number;
-
-  comment: string;
-}

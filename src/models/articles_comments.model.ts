@@ -1,16 +1,20 @@
 // src/models/article-comments.model.ts
 import { Sequelize, DataTypes, Model, Optional } from "sequelize";
-import { ArticleComment } from "@/interfaces/article.interface";
+import { Comment } from "@/interfaces/comment.interface";
+import { UserModel } from "./users.model";
+import { FileModel } from "./files.model";
+import { User } from "@/interfaces/user.interface";
 
-export type ArticleCommentCreationAttributes = Optional<ArticleComment, "pk" | "uuid">;
+export type ArticleCommentCreationAttributes = Optional<Comment, "pk" | "uuid">;
 
-export class ArticleCommentModel extends Model<ArticleComment, ArticleCommentCreationAttributes> implements ArticleComment {
+export class ArticleCommentModel extends Model<Comment, ArticleCommentCreationAttributes> implements Comment {
   public pk: number;
   public uuid: string;
   public article_id: number;
   public author_id: number;
   public comment: string;
 
+  public replies: number;
 
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
