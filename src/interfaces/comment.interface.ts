@@ -7,7 +7,7 @@ export interface Comment {
     article_id: number;
     author_id: number;
     
-    // likes?: number;
+    likes?: number;
     replies?: number;
 }
 
@@ -38,4 +38,5 @@ export interface CommentParsed {
     author_id: number;
     comment: string;
     replies: number;
+    likes: number;
 }

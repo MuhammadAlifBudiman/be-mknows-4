@@ -16,15 +16,15 @@ export class CommentController{
 
     public getCommentsByArticle = async (req: RequestWithUser, res: Response, next: NextFunction) => {
         const { article_id } = req.params;
-        const response: Comment[] = await this.comment.getCommentsByArticle(article_id);
-        res.status(200).json(apiResponse(200, "OK", "Get Comment Success", response));
+        const response = await this.comment.getCommentsByArticle(article_id);
+        res.status(200).json(apiResponse(200, "OK", "Get Comment Success", response.comments));
     }
 
     public createComment = async (req: RequestWithUser, res: Response, next: NextFunction) => {
         const { article_id } = req.params;
         const author_id = req.user.pk;
         const data = req.body;
-        const response: Comment = await this.comment.createComment(article_id, author_id, data);
+        const response = await this.comment.createComment(article_id, author_id, data);
         res.status(200).json(apiResponse(200, "OK", "Create Comment Success", response));
     }
 
@@ -32,7 +32,7 @@ export class CommentController{
         const { comment_id } = req.params;
         
         const data = req.body;
-        const response: Comment = await this.comment.updateComment(comment_id, data);
+        const response = await this.comment.updateComment(comment_id, data);
         res.status(200).json(apiResponse(200, "OK", "Update Comment Success", response));
     }
 
@@ -40,5 +40,12 @@ export class CommentController{
         const { comment_id } = req.params;
         const response: boolean = await this.comment.deleteComment(comment_id);
         res.status(200).json(apiResponse(200, "OK", "Delete Comment Success", response));
+    }
+
+    public likeComment = async (req: RequestWithUser, res: Response, next: NextFunction) => {
+        const { comment_id } = req.params;
+        const user_id = req.user.pk;
+        const response = await this.comment.likeComment(comment_id, user_id);
+        res.status(200).json(apiResponse(200, "OK", "Like Comment Success", response));
     }
 }

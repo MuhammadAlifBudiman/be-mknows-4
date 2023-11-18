@@ -15,6 +15,7 @@ export class ArticleCommentModel extends Model<Comment, ArticleCommentCreationAt
   public comment: string;
 
   public replies: number;
+  public likes: number;
 
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
