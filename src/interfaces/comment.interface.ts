@@ -40,3 +40,18 @@ export interface CommentParsed {
     replies: number;
     likes: number;
 }
+
+export interface CommentReplyParsed {
+    uuid: string;
+    reply: string;
+    comment: {
+        uuid: string;
+        comment: string;
+    },
+    author: {
+      uuid: string;
+      full_name: string;
+      avatar: string;
+    },
+    likes: number;
+}
