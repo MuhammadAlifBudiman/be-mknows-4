@@ -24,7 +24,7 @@ export interface CommentReply {
     author_id: number;
     
     reply: string;
-    // likes?: number;
+    likes?: number;
 }
 
 export interface CommentReplyLike {
@@ -34,9 +34,18 @@ export interface CommentReplyLike {
 
 export interface CommentParsed {
     uuid: string;
-    article_id: number;
-    author_id: number;
     comment: string;
+
+    article: {
+        uuid: string;
+        title: string;
+    },
+    author: {
+        uuid: string;
+        full_name: string;
+        avatar: string;
+    },
+
     replies: number;
     likes: number;
 }

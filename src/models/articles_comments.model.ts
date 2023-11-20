@@ -4,6 +4,8 @@ import { Comment } from "@/interfaces/comment.interface";
 import { UserModel } from "./users.model";
 import { FileModel } from "./files.model";
 import { User } from "@/interfaces/user.interface";
+import { Article } from "@/interfaces/article.interface";
+import { ArticleModel } from "./articles.model";
 
 export type ArticleCommentCreationAttributes = Optional<Comment, "pk" | "uuid">;
 
@@ -13,6 +15,9 @@ export class ArticleCommentModel extends Model<Comment, ArticleCommentCreationAt
   public article_id: number;
   public author_id: number;
   public comment: string;
+
+  public readonly article: Article
+  public readonly author: User;
 
   public replies: number;
   public likes: number;
@@ -52,8 +57,33 @@ export default function (sequelize: Sequelize): typeof ArticleCommentModel {
       timestamps: true,
       paranoid: true,
       sequelize,
+      defaultScope: {
+        include: [
+          {
+            attributes: ["uuid", "full_name", "display_picture"],
+            model: UserModel,
+            as: "author",
+            include: [
+              {
+                attributes: ["uuid"],
+                model: FileModel,
+                as: "avatar"
+              }
+            ]
+          },
+          {
+            attributes: ["uuid", "title"],
+            model: ArticleModel,
+            as: "article",
+          },
+        ]
+      }
     },
   );
+
+  ArticleModel.hasMany(ArticleCommentModel, { foreignKey: "article_id", as: "comments" });
+  ArticleCommentModel.belongsTo(ArticleModel, { foreignKey: "article_id", as: "article" });
+  ArticleCommentModel.belongsTo(UserModel, { foreignKey: "author_id", as: "author" });
 
   return ArticleCommentModel;
 }

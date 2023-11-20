@@ -11,9 +11,16 @@ export class CommentService {
   private commentParsed(comment: ArticleCommentModel): CommentParsed {
     return {
       uuid: comment.uuid,
-      article_id: comment.article_id,
-      author_id: comment.author_id,
       comment: comment.comment,
+      article: {
+        uuid: comment.article.uuid,
+        title: comment.article.title
+      },
+      author: {
+        uuid: comment.author.uuid,
+        full_name: comment.author.full_name || null,
+        avatar: comment.author.avatar?.uuid || null, 
+      },
       likes: comment.likes || 0,
       replies: comment.replies || 0
     };
