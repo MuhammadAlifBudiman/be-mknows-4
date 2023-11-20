@@ -27,6 +27,7 @@ export class ArticleController {
 
   public getArticle = asyncHandler(async (req: RequestWithUser, res: Response, next: NextFunction) => {
     const { article_id } = req.params;
+    this.article.incrementViewed(article_id);
     const response: ArticleParsed = await this.article.getArticleById(article_id);
     res.status(200).json(apiResponse(200, "OK", "Get Article Success", response));
   });

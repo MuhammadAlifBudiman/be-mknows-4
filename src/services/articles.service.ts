@@ -18,6 +18,7 @@ export class ArticleService {
       title: article.title,
       description: article.description,
       content: article.content,
+      viewed: article.viewed,
 
       thumbnail: article.thumbnail?.uuid, 
       author: {
@@ -119,6 +120,10 @@ export class ArticleService {
 
     const transformedArticles = articles.map(article => this.articleParsed(article));
     return { articles: transformedArticles, pagination };
+  }
+
+  public async incrementViewed(article_id: string): Promise<void> {
+    await DB.Articles.increment("viewed", { where: { uuid: article_id } });
   }
 
   public async getArticleById(article_id: string): Promise<ArticleParsed> {

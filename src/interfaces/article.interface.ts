@@ -7,6 +7,7 @@ export interface Article {
   title: string;
   description: string;
   content: string;
+  viewed: number;
 
   thumbnail_id: number;
   author_id: number;
@@ -37,6 +38,7 @@ export interface ArticleParsed {
   title: string;
   description: string;
   content: string;
+  viewed: number;
 
   thumbnail: string;
 
