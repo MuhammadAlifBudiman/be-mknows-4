@@ -33,6 +33,16 @@ export class ArticleRoute implements Routes {
       `/v1/${this.path}/:article_id`,
       AuthMiddleware,
       this.article.deleteArticle
+    );
+    this.router.post(
+      `/v1/${this.path}/:article_id/bookmark`,
+      AuthMiddleware,
+      this.article.bookmarkArticle
+    );
+    this.router.get(
+      `/v1/${this.path}/bookmark/me`,
+      AuthMiddleware,
+      this.article.getBookmarkByMe
     )
   }
 }

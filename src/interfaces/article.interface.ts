@@ -55,3 +55,8 @@ export interface ArticleLike {
   article_id: number;
   user_id: number;
 }
+
+export interface ArticleBookmark {
+  article_id: number;
+  user_id: number;
+}

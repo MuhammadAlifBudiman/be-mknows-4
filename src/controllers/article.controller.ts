@@ -63,4 +63,19 @@ export class ArticleController {
     const response = await this.article.likeArticle(user_id, article_id);
     res.status(200).json(apiResponse(200, "OK", "Like Article Success", response));
   });
+
+  public bookmarkArticle = asyncHandler(async (req: RequestWithUser, res: Response, next: NextFunction) => {
+    const { article_id } = req.params;
+    const user_id = req.user.pk as number;
+
+    const response = await this.article.bookmarkArticle(user_id, article_id);
+    res.status(200).json(apiResponse(200, "OK", "Bookmark Article Success", response));
+  });
+
+  public getBookmarkByMe = asyncHandler(async (req: RequestWithUser, res: Response, next: NextFunction) => {
+    const user_id = req.user.pk as number;
+
+    const response = await this.article.getBookmarkByMe(user_id);
+    res.status(200).json(apiResponse(200, "OK", "Get Bookmark Success", response.articles));
+  });
 }

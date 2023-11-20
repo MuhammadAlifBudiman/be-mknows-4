@@ -379,5 +379,78 @@ export class ArticleService {
       throw error;
     }
   }
+
+  public async bookmarkArticle(user_id: number, article_id: string): Promise<object> {
+    const article = await DB.Articles.findOne({ attributes: ["pk"], where: { uuid: article_id } });
+    if (!article) {
+      throw new HttpException(false, 400, "Article is not found");
+    }
+
+    const transaction = await DB.sequelize.transaction();
+    try {
+      const [articleBookmark, articleBookmarksCount] = await Promise.all([
+        DB.ArticlesBookmarks.findOne({ where: { article_id: article.pk, user_id }, transaction }),
+        DB.ArticlesBookmarks.count({ where: { article_id: article.pk, user_id }, transaction })
+      ]);
+  
+      if (!articleBookmark) {
+        await DB.ArticlesBookmarks.create({ article_id: article.pk, user_id }, { transaction });
+        await transaction.commit();
+        return { article_id, is_bookmarked: true, bookmarks: articleBookmarksCount + 1 }; 
+      } else {
+        await DB.ArticlesBookmarks.destroy({ where: { article_id: article.pk, user_id }, force: true, transaction });
+        await transaction.commit();
+        return { article_id, is_bookmarked: false, bookmarks: articleBookmarksCount - 1 }; 
+      }
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
+  }
+
+  public async getBookmarkByMe(user_id: number): Promise<{articles: ArticleParsed[]}> {
+
+    const articleBookmark = await DB.ArticlesBookmarks.findAll({ attributes: ["article_id"], where: { user_id: user_id } });
+
+    const articleIds = articleBookmark.map(articleBookmark => articleBookmark.article_id);
+
+    const articles = await DB.Articles.findAll({ 
+      where: { 
+        pk: { [Op.in]: articleIds }
+      }
+    });
+
+    if (!articleBookmark) {
+      throw new HttpException(false, 400, "Bookmark is empty");
+    }
+
+    const likeCountPromises = articles.map(article => {
+      return DB.ArticlesLikes.count({
+        where: { article_id: article.pk }
+      });
+    });
+    
+    const likeCounts = await Promise.all(likeCountPromises);
+    
+    articles.forEach((article, index) => {
+      article.likes = likeCounts[index];
+    });
+
+    const commentCountPromises = articles.map(article => {
+      return DB.ArticlesComments.count({
+        where: { article_id: article.pk }
+      });
+    });
+
+    const commentCounts = await Promise.all(commentCountPromises);
+
+    articles.forEach((article, index) => {
+      article.comments = commentCounts[index];
+    });
+
+    const transformedArticles = articles.map(article => this.articleParsed(article));
+
+    return { articles: transformedArticles };
+  }
   
 }
