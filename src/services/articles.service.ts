@@ -329,24 +329,29 @@ export class ArticleService {
 
   public async deleteArticle(article_id: string, author_id: number): Promise<boolean> {
     const article = await DB.Articles.findOne({ where: { uuid: article_id, author_id }});
-
     if (!article) {
       throw new HttpException(false, 400, "Article is not found");
     }
+
+    const comments = await DB.ArticlesComments.findAll({ attributes: ["pk"], where: { article_id: article.pk }});
+    const commentIds = comments.map(comment => comment.pk);
+
+    const replies = await DB.CommentsReplies.findAll({ attributes: ["pk"], where: { comment_id: { [Op.in]: commentIds } }});
+    const replyIds = replies.map(reply => reply.pk);
 
     const transaction = await DB.sequelize.transaction();
     try {
       await article.destroy({ transaction });
 
-      await DB.ArticlesCategories.destroy({ 
-        where: { article_id: article.pk }, 
-        transaction,
-      });
-
-      await DB.ArticlesLikes.destroy({ 
-        where: { article_id: article.pk }, 
-        transaction,
-      });
+      await Promise.all([
+        DB.ArticlesCategories.destroy({ where: { article_id: article.pk }, transaction }),
+        DB.ArticlesLikes.destroy({ where: { article_id: article.pk }, transaction }),
+        DB.ArticlesBookmarks.destroy({ where: { article_id: article.pk }, transaction }),
+        DB.ArticlesComments.destroy({ where: { article_id: article.pk }, transaction }),
+        DB.ArticleCommentsLikes.destroy({ where: { comment_id: { [Op.in]: commentIds } }, transaction }),
+        DB.CommentsReplies.destroy({ where: { comment_id: { [Op.in]: commentIds } }, transaction }),
+        DB.CommentsRepliesLikes.destroy({ where: { reply_id: { [Op.in]: replyIds } }, transaction }),
+      ]);
       
       await transaction.commit();
 

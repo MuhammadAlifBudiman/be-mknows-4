@@ -46,8 +46,13 @@ export class ReplyService {
 
   public async getRepliesByComment(comment_id: string): Promise<{ replies: CommentReplyParsed[] }> {
     const comment = await DB.ArticlesComments.findOne({ where: { uuid: comment_id }, attributes: ["pk"] });
+    if(!comment) {
+      throw new HttpException(false, 404, "Comment is not found");
+    }
     const replies = await DB.CommentsReplies.findAll({ where: { comment_id: comment.pk } });
-
+    if(!replies) {
+      throw new HttpException(false, 404, "Reply is not found");
+    }
     const likeCountPromises = replies.map(reply => {
       return DB.CommentsRepliesLikes.count({
         where: { reply_id: reply.pk }
@@ -115,15 +120,28 @@ export class ReplyService {
         throw new HttpException(false, 400, "Reply is not found");
     }
 
-    await reply.destroy();
-    return true;
+    const transaction = await DB.sequelize.transaction();
+    try {
+      await reply.destroy({ transaction });
+
+      await Promise.all([
+        DB.CommentsRepliesLikes.destroy({ where: { reply_id: reply.pk }, transaction }),
+      ]);
+      
+      await transaction.commit();
+
+      return true;
+    } catch (error) {
+      await transaction.rollback();
+      throw error; 
+    }
   }
 
   public async likeReply(reply_id: string, user_id: number): Promise<object> {
     const reply = await DB.CommentsReplies.findOne({ where: { uuid: reply_id }});
 
     if(!reply) {
-      throw new HttpException(false, 400, "Comment is not found");
+      throw new HttpException(false, 400, "Reply is not found");
     }
 
     const transaction = await DB.sequelize.transaction();

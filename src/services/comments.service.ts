@@ -1,9 +1,10 @@
 import { DB } from "@/database";
 import { CreateCommentDto, UpdateCommentDto } from "@/dtos/comments.dto";
-import { HttpException } from "@/exceptions/HttpException";
+import { HttpException } from "@exceptions/HttpException";
 import { Comment, CommentParsed } from "@/interfaces/comment.interface";
 import { ArticleCommentModel } from "@/models/articles_comments.model";
 import { Service } from "typedi";
+import { Op } from "sequelize";
 
 
 @Service()
@@ -61,7 +62,13 @@ export class CommentService {
 
   public async getCommentsByArticle(article_id: string): Promise<{comments: CommentParsed[]}> {
     const article = await DB.Articles.findOne({ where: { uuid: article_id }, attributes: ["pk"] });
+    if(!article) {
+      throw new HttpException(false, 404, "Article is not found");
+    }
     const comments = await DB.ArticlesComments.findAll({ where: { article_id: article.pk } });
+    if(!comments) {
+      throw new HttpException(false, 404, "Comment is not found");
+    }
     const repliesCountPromises = comments.map(comment => {
       return DB.CommentsReplies.count({
         where: { comment_id: comment.pk }
@@ -146,8 +153,26 @@ export class CommentService {
       throw new HttpException(false, 400, "Comment is not found");
     }
 
-    await comment.destroy();
-    return true;
+    const replies = await DB.CommentsReplies.findAll({ attributes: ["pk"], where: { comment_id: comment.pk} });
+    const replyIds = replies.map(reply => reply.pk);
+
+    const transaction = await DB.sequelize.transaction();
+    try {
+      await comment.destroy({ transaction });
+
+      await Promise.all([
+        DB.ArticleCommentsLikes.destroy({ where: { comment_id: comment.pk}, transaction }),
+        DB.CommentsReplies.destroy({ where: { comment_id: comment.pk }, transaction }),
+        DB.CommentsRepliesLikes.destroy({ where: { reply_id: { [Op.in]: replyIds } }, transaction }),
+      ]);
+      
+      await transaction.commit();
+
+      return true;
+    } catch (error) {
+      await transaction.rollback();
+      throw error; 
+    }
   }
 
   public async likeComment(comment_id: string, user_id: number): Promise<object> {
