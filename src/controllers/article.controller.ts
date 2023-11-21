@@ -2,7 +2,7 @@ import { Response, NextFunction } from "express";
 import asyncHandler from "express-async-handler";
 import { Container } from "typedi";
 
-import { Article, ArticleParsed, ArticleQueryParams } from "@interfaces/article.interface";
+import { Article, ArticleParsed, ArticlePopularQueryParams, ArticleQueryParams } from "@interfaces/article.interface";
 import { RequestWithUser } from "@interfaces/authentication/token.interface";
 import { ArticleService } from "@services/articles.service";
 
@@ -27,7 +27,8 @@ export class ArticleController {
 
   public getArticle = asyncHandler(async (req: RequestWithUser, res: Response, next: NextFunction) => {
     const { article_id } = req.params;
-    this.article.incrementViewed(article_id);
+    const user_id = req.user.pk as number;
+    this.article.addView(article_id, user_id);
     const response: ArticleParsed = await this.article.getArticleById(article_id);
     res.status(200).json(apiResponse(200, "OK", "Get Article Success", response));
   });
@@ -78,5 +79,11 @@ export class ArticleController {
 
     const response = await this.article.getBookmarkByMe(user_id);
     res.status(200).json(apiResponse(200, "OK", "Get Bookmark Success", response.articles));
+  });
+
+  public getPopularArticles = asyncHandler(async (req: RequestWithUser, res: Response, next: NextFunction) => {
+    const query: ArticlePopularQueryParams = req.query;
+    const response = await this.article.getPopularArticles(query);
+    res.status(200).json(apiResponse(200, "OK", "Get Popular Articles Success", response.articles ));
   });
 }

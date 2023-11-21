@@ -1,10 +1,10 @@
-import { Op } from "sequelize";
+import { Op, Sequelize } from "sequelize";
 import { Service } from "typedi";
 import { DB } from "@database";
 
 import { ArticleModel } from "@models/articles.model";
 
-import { ArticleParsed, ArticleQueryParams } from "@interfaces/article.interface";
+import { ArticleParsed, ArticlePopularQueryParams, ArticleQueryParams } from "@interfaces/article.interface";
 import { Pagination } from "@interfaces/common/pagination.interface";
 import { CreateArticleDto, UpdateArticleDto } from "@dtos/articles.dto";
 import { HttpException } from "@exceptions/HttpException";
@@ -18,7 +18,6 @@ export class ArticleService {
       title: article.title,
       description: article.description,
       content: article.content,
-      viewed: article.viewed,
 
       thumbnail: article.thumbnail?.uuid, 
       author: {
@@ -27,8 +26,10 @@ export class ArticleService {
         avatar: article.author.avatar?.uuid || null, 
       },
       categories: article.categories.map((articleCategory) => articleCategory.category),
+      views: article.views || 0,
       likes: article.likes || 0,
-      comments: article.comments || 0
+      comments: article.comments || 0,
+      bookmarks: article.bookmarks || 0
     };
   }
 
@@ -111,6 +112,30 @@ export class ArticleService {
       article.comments = commentCounts[index];
     });
 
+    const viewCountPromises = articles.map(article => {
+      return DB.ArticlesViews.count({
+        where: { article_id: article.pk }
+      });
+    });
+
+    const viewCounts = await Promise.all(viewCountPromises);
+
+    articles.forEach((article, index) => {
+      article.views = viewCounts[index];
+    });
+
+    const bookmarkCountPromises = articles.map(article => {
+      return DB.ArticlesBookmarks.count({
+        where: { article_id: article.pk }
+      });
+    });
+
+    const bookmarkCounts = await Promise.all(bookmarkCountPromises);
+
+    articles.forEach((article, index) => {
+      article.bookmarks = bookmarkCounts[index];
+    });
+
     const pagination: Pagination = {
       current_page: parseInt(page),
       size_page: articles.length,
@@ -120,10 +145,6 @@ export class ArticleService {
 
     const transformedArticles = articles.map(article => this.articleParsed(article));
     return { articles: transformedArticles, pagination };
-  }
-
-  public async incrementViewed(article_id: string): Promise<void> {
-    await DB.Articles.increment("viewed", { where: { uuid: article_id } });
   }
 
   public async getArticleById(article_id: string): Promise<ArticleParsed> {
@@ -146,6 +167,18 @@ export class ArticleService {
     });
 
     article.comments = commentsCount;
+
+    const viewCount = await DB.ArticlesViews.count({
+      where: { article_id: article.pk }
+    });
+
+    article.views = viewCount;
+
+    const bookmarkCount = await DB.ArticlesBookmarks.count({
+      where: { article_id: article.pk }
+    });
+
+    article.bookmarks = bookmarkCount;
 
     const response = this.articleParsed(article);
     return response;
@@ -195,6 +228,30 @@ export class ArticleService {
 
     articles.forEach((article, index) => {
       article.comments = commentCounts[index];
+    });
+
+    const viewCountPromises = articles.map(article => {
+      return DB.ArticlesViews.count({
+        where: { article_id: article.pk }
+      });
+    });
+
+    const viewCounts = await Promise.all(viewCountPromises);
+
+    articles.forEach((article, index) => {
+      article.views = viewCounts[index];
+    });
+
+    const bookmarkCountPromises = articles.map(article => {
+      return DB.ArticlesBookmarks.count({
+        where: { article_id: article.pk }
+      });
+    });
+
+    const bookmarkCounts = await Promise.all(bookmarkCountPromises);
+
+    articles.forEach((article, index) => {
+      article.bookmarks = bookmarkCounts[index];
     });
 
 
@@ -461,6 +518,125 @@ export class ArticleService {
     const transformedArticles = articles.map(article => this.articleParsed(article));
 
     return { articles: transformedArticles };
+  }
+
+  public async addView(article_id: string, user_id: number): Promise<boolean> {
+    const article = await DB.Articles.findOne({ attributes: ["pk"], where: { uuid: article_id } });
+    if (!article) {
+      throw new HttpException(false, 400, "Article is not found");
+    }
+
+    DB.ArticlesViews.create({ article_id: article.pk, user_id });
+    const startDate = new Date("2023-01-01");
+    const endDate = new Date("2023-12-31");
+    console.log(await DB.ArticlesViews.count({ 
+      where: {
+        created_at: {
+          [Op.and]: [
+            { [Op.gte]: startDate }, // Tanggal lebih besar atau sama dengan startDate
+            { [Op.lte]: endDate }    // Tanggal kurang dari atau sama dengan endDate
+          ]
+        }
+      }
+    }))
+
+    return true
+  } 
+
+  public async getPopularArticles(query: ArticlePopularQueryParams): Promise<{ articles: ArticleParsed[] }> {
+    const { range } = query;
+    const startDate = this.calculateStartDate(range);
+
+    const articleViews = await DB.ArticlesViews.findAll({
+      attributes: ['article_id'],
+      where: {
+        created_at: {
+          [Op.gte]: startDate,
+        },
+      },
+      group: ['article_id'],
+      order: [[Sequelize.literal('COUNT(*)'), 'DESC']],
+    });
+
+    if (!articleViews) {
+      throw new HttpException(false, 400, "There is no popular article");
+    }
+
+    const articleIds = articleViews.map(articleView => articleView.article_id);
+
+    const articles = await DB.Articles.findAll({ 
+      where: { 
+        pk: { [Op.in]: articleIds }
+      }
+    });
+
+    const likeCountPromises = articles.map(article => {
+      return DB.ArticlesLikes.count({
+        where: { article_id: article.pk }
+      });
+    });
+    
+    const likeCounts = await Promise.all(likeCountPromises);
+    
+    articles.forEach((article, index) => {
+      article.likes = likeCounts[index];
+    });
+
+    const commentCountPromises = articles.map(article => {
+      return DB.ArticlesComments.count({
+        where: { article_id: article.pk }
+      });
+    });
+
+    const commentCounts = await Promise.all(commentCountPromises);
+
+    articles.forEach((article, index) => {
+      article.comments = commentCounts[index];
+    });
+
+    const viewCountPromises = articles.map(article => {
+      return DB.ArticlesViews.count({
+        where: { article_id: article.pk }
+      });
+    });
+
+    const viewCounts = await Promise.all(viewCountPromises);
+
+    articles.forEach((article, index) => {
+      article.views = viewCounts[index];
+    });
+
+    const bookmarkCountPromises = articles.map(article => {
+      return DB.ArticlesBookmarks.count({
+        where: { article_id: article.pk }
+      });
+    });
+
+    const bookmarkCounts = await Promise.all(bookmarkCountPromises);
+
+    articles.forEach((article, index) => {
+      article.bookmarks = bookmarkCounts[index];
+    });
+
+    const transformedArticles = articles.map(article => this.articleParsed(article));
+
+    return { articles: transformedArticles };
+  }
+
+
+  private calculateStartDate(range: string): Date {
+    const currentDate = new Date();
+    switch (range) {
+      case "3 days":
+        return new Date(currentDate.setDate(currentDate.getDate() - 3));
+      case "1 week":
+        return new Date(currentDate.setDate(currentDate.getDate() - 7));
+      case "today":
+        return new Date(currentDate.setHours(0, 0, 0, 0));
+      default:
+        throw new HttpException(false, 400, "Range is not valid");
+    }
+    
   }
   
 }

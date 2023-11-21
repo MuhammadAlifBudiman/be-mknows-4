@@ -22,6 +22,7 @@ import CommentReplyModel from "@/models/articles_replies.model";
 import ArticleCommentLikeModel from "@/models/articles_comments_like.model";
 import CommentReplyLikeModel from "@/models/articles_replies_like.model";
 import ArticleBookmarkModel from "@/models/articles_bookmark.model";
+import ArticleViewModel from "@/models/articles_views.model";
 
 const sequelize = new Sequelize(
   dbConfig.database as string,
@@ -53,6 +54,7 @@ export const DB = {
   ArticleCommentsLikes: ArticleCommentLikeModel(sequelize),
   CommentsRepliesLikes: CommentReplyLikeModel(sequelize),
   ArticlesBookmarks: ArticleBookmarkModel(sequelize),
+  ArticlesViews: ArticleViewModel(sequelize),
 
   sequelize, // connection instance (RAW queries)
   Sequelize, // library

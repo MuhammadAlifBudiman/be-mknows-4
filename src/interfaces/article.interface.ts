@@ -7,14 +7,15 @@ export interface Article {
   title: string;
   description: string;
   content: string;
-  viewed: number;
 
   thumbnail_id: number;
   author_id: number;
 
   categories?: ArticleCategory[];
+  views?: number;
   likes?: number;
   comments?: number;
+  bookmarks?: number;
 }
 
 export interface ArticleCategory {
@@ -38,7 +39,6 @@ export interface ArticleParsed {
   title: string;
   description: string;
   content: string;
-  viewed: number;
 
   thumbnail: string;
 
@@ -49,8 +49,10 @@ export interface ArticleParsed {
   },
 
   categories: Category[];
+  views: number;
   likes: number;
   comments: number;
+  bookmarks: number;
 }
 
 export interface ArticleLike {
@@ -61,4 +63,13 @@ export interface ArticleLike {
 export interface ArticleBookmark {
   article_id: number;
   user_id: number;
+}
+
+export interface ArticleView {
+  article_id: number;
+  user_id: number;
+}
+
+export interface ArticlePopularQueryParams {
+  range?: string;
 }

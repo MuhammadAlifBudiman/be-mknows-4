@@ -19,7 +19,6 @@ export class ArticleModel extends Model<Article, ArticleCreationAttributes> impl
   public title: string;
   public description: string;
   public content: string;
-  public viewed: number;
 
   public thumbnail_id: number;
   public author_id: number;
@@ -28,8 +27,10 @@ export class ArticleModel extends Model<Article, ArticleCreationAttributes> impl
   public readonly thumbnail: File;
   public readonly author: User;
   public readonly categories: ArticleCategory[];
+  public views: number;
   public likes: number;
   public comments: number;
+  public bookmarks: number;
 
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
@@ -59,10 +60,6 @@ export default function (sequelize: Sequelize): typeof ArticleModel {
       content: {
         type: DataTypes.TEXT,
         allowNull: false,
-      },
-      viewed: {
-        type: DataTypes.INTEGER,
-        defaultValue: 0,
       },
       thumbnail_id: {
         type: DataTypes.INTEGER,
