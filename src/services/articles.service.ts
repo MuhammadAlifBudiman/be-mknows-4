@@ -546,7 +546,7 @@ export class ArticleService {
   public async getPopularArticles(query: ArticlePopularQueryParams): Promise<{ articles: ArticleParsed[] }> {
     const { range } = query;
     const startDate = this.calculateStartDate(range);
-
+  
     const articleViews = await DB.ArticlesViews.findAll({
       attributes: ['article_id'],
       where: {
@@ -554,74 +554,179 @@ export class ArticleService {
           [Op.gte]: startDate,
         },
       },
-      group: ['article_id'],
-      order: [[Sequelize.literal('COUNT(*)'), 'DESC']],
     });
-
-    if (!articleViews) {
+  
+    if (!articleViews || articleViews.length === 0) {
       throw new HttpException(false, 400, "There is no popular article");
     }
-
+  
     const articleIds = articleViews.map(articleView => articleView.article_id);
-
-    const articles = await DB.Articles.findAll({ 
-      where: { 
+  
+    const articles = await DB.Articles.findAll({
+      where: {
         pk: { [Op.in]: articleIds }
       }
     });
-
-    const likeCountPromises = articles.map(article => {
-      return DB.ArticlesLikes.count({
-        where: { article_id: article.pk }
+  
+    // Hitung berdasarkan date range untuk menentukan popularitas
+    const likeCountPromises = articles.map(async (article) => {
+      const count = await DB.ArticlesLikes.count({
+        where: {
+          article_id: article.pk,
+          created_at: {
+            [Op.gte]: startDate,
+          },
+        },
       });
+      return count;
     });
-    
-    const likeCounts = await Promise.all(likeCountPromises);
-    
+  
+    const commentCountPromises = articles.map(async (article) => {
+      const count = await DB.ArticlesComments.count({
+        where: {
+          article_id: article.pk,
+          created_at: {
+            [Op.gte]: startDate,
+          },
+        },
+      });
+      return count;
+    });
+  
+    const viewCountPromises = articles.map(async (article) => {
+      const count = await DB.ArticlesViews.count({
+        where: {
+          article_id: article.pk,
+          created_at: {
+            [Op.gte]: startDate,
+          },
+        },
+      });
+      return count;
+    });
+  
+    const bookmarkCountPromises = articles.map(async (article) => {
+      const count = await DB.ArticlesBookmarks.count({
+        where: {
+          article_id: article.pk,
+          created_at: {
+            [Op.gte]: startDate,
+          },
+        },
+      });
+      return count;
+    });
+  
+    const [likeCounts, commentCounts, viewCounts, bookmarkCounts] = await Promise.all([
+      Promise.all(likeCountPromises),
+      Promise.all(commentCountPromises),
+      Promise.all(viewCountPromises),
+      Promise.all(bookmarkCountPromises),
+    ]);
+  
     articles.forEach((article, index) => {
       article.likes = likeCounts[index];
-    });
-
-    const commentCountPromises = articles.map(article => {
-      return DB.ArticlesComments.count({
-        where: { article_id: article.pk }
-      });
-    });
-
-    const commentCounts = await Promise.all(commentCountPromises);
-
-    articles.forEach((article, index) => {
       article.comments = commentCounts[index];
-    });
-
-    const viewCountPromises = articles.map(article => {
-      return DB.ArticlesViews.count({
-        where: { article_id: article.pk }
-      });
-    });
-
-    const viewCounts = await Promise.all(viewCountPromises);
-
-    articles.forEach((article, index) => {
       article.views = viewCounts[index];
-    });
-
-    const bookmarkCountPromises = articles.map(article => {
-      return DB.ArticlesBookmarks.count({
-        where: { article_id: article.pk }
-      });
-    });
-
-    const bookmarkCounts = await Promise.all(bookmarkCountPromises);
-
-    articles.forEach((article, index) => {
       article.bookmarks = bookmarkCounts[index];
     });
-
+  
     const transformedArticles = articles.map(article => this.articleParsed(article));
+  
+    const weight = {
+      views: 1,
+      likes: 2,
+      comments: 3,
+      bookmarks: 4,
+    };
+  
+    // Mengurutkan artikel berdasarkan bobotnya
+    const sortedArticles = transformedArticles.sort((a, b) => {
+      const aPopularity = (weight.views * a.views) + (weight.likes * a.likes) + (weight.comments * a.comments) + (weight.bookmarks * a.bookmarks);
+      const bPopularity = (weight.views * b.views) + (weight.likes * b.likes) + (weight.comments * b.comments) + (weight.bookmarks * b.bookmarks);
+  
+      return bPopularity - aPopularity;
+    });
 
-    return { articles: transformedArticles };
+  
+    // Tampilkan jumlah views, likes, comments, dan bookmarks yang sesuai
+    const totalLikePromises = sortedArticles.map(async (article) => {
+      const articleId = article.uuid;
+      const articlePk = await DB.Articles.findOne({
+        attributes: ["pk"],
+        where: {
+          uuid: articleId,
+        },
+      });
+      return DB.ArticlesLikes.count({
+        where: {
+          article_id: articlePk.pk,
+        },
+      });
+    });
+
+    const totalCommentPromises = sortedArticles.map(async (article) => {
+      const articleId = article.uuid;
+      const articlePk = await DB.Articles.findOne({
+        attributes: ["pk"],
+        where: {
+          uuid: articleId,
+        },
+      });
+      return DB.ArticlesComments.count({
+        where: {
+          article_id: articlePk.pk,
+        },
+      });
+    });
+
+    const totalViewPromises = sortedArticles.map(async (article) => {
+      const articleId = article.uuid;
+      const articlePk = await DB.Articles.findOne({
+        attributes: ["pk"],
+        where: {
+          uuid: articleId,
+        },
+      });
+      return DB.ArticlesViews.count({
+        where: {
+          article_id: articlePk.pk,
+        },
+      });
+    });
+
+    const totalBookmarkPromises = sortedArticles.map(async (article) => {
+      const articleId = article.uuid;
+      const articlePk = await DB.Articles.findOne({
+        attributes: ["pk"],
+        where: {
+          uuid: articleId,
+        },
+      });
+      return DB.ArticlesBookmarks.count({
+        where: {
+          article_id: articlePk.pk,
+        },
+      });
+    });
+
+    const [totalLikes, totalComments, totalViews, totalBookmarks] = await Promise.all([
+      Promise.all(totalLikePromises),
+      Promise.all(totalCommentPromises),
+      Promise.all(totalViewPromises),
+      Promise.all(totalBookmarkPromises),
+    ]);
+
+    sortedArticles.forEach((article, index) => {
+      article.likes = totalLikes[index];
+      article.comments = totalComments[index];
+      article.views = totalViews[index];
+      article.bookmarks = totalBookmarks[index];
+    });
+
+    return { articles: sortedArticles };
   }
+  
 
 
   private calculateStartDate(range: string): Date {
