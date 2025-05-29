@@ -1,18 +1,14 @@
 import { Sequelize } from "sequelize";
 import { NODE_ENV } from "@config/index";
 import { logger } from "@utils/logger";
-
 import config from "@config/database";
-const dbConfig = config[NODE_ENV] || config["development"];
-
+import { ensureDatabaseExists } from "./ensureDatabase";
 import OTPModel from "@/models/otps.model";
-
 import RoleModel from "@models/roles.model";
 import FileModel from "@models/files.model";
 import UserModel from "@models/users.model";
 import UserRoleModel from "@models/users_roles.model";
 import UserSessionModel from "@models/users_sessions.model";
-
 import CategoryModel from "@models/categories.model";
 import ArticleModel from "@models/articles.model";
 import ArticleCategoryModel from "@models/articles_categories.model";
@@ -24,38 +20,44 @@ import CommentReplyLikeModel from "@/models/articles_replies_like.model";
 import ArticleBookmarkModel from "@/models/articles_bookmark.model";
 import ArticleViewModel from "@/models/articles_views.model";
 
-const sequelize = new Sequelize(
-  dbConfig.database as string,
-  dbConfig.username as string,
-  dbConfig.password,
-  dbConfig
-);
+const dbConfig = config[NODE_ENV] || config["development"];
 
-sequelize
-  .authenticate()
-  .then(() => logger.info(`=> Database Connected on ${NODE_ENV}`))
-  .catch((e) => console.error(e));
+// Ensure DB exists before initializing Sequelize
+let DB: any;
 
-export const DB = {
-  OTPs: OTPModel(sequelize),
+(async () => {
+  await ensureDatabaseExists();
 
-  Files: FileModel(sequelize),
-  Roles: RoleModel(sequelize),
-  Users: UserModel(sequelize),
-  UsersRoles: UserRoleModel(sequelize),
-  UsersSessions: UserSessionModel(sequelize),
+  const sequelize = new Sequelize(
+    dbConfig.database as string,
+    dbConfig.username as string,
+    dbConfig.password,
+    dbConfig
+  );
 
-  Categories: CategoryModel(sequelize),
-  Articles: ArticleModel(sequelize),
-  ArticlesCategories: ArticleCategoryModel(sequelize),
-  ArticlesLikes: ArticleLikeModel(sequelize),
-  ArticlesComments: ArticleCommentModel(sequelize),
-  CommentsReplies: CommentReplyModel(sequelize),
-  ArticleCommentsLikes: ArticleCommentLikeModel(sequelize),
-  CommentsRepliesLikes: CommentReplyLikeModel(sequelize),
-  ArticlesBookmarks: ArticleBookmarkModel(sequelize),
-  ArticlesViews: ArticleViewModel(sequelize),
+  await sequelize.authenticate();
+  logger.info(`=> Database Connected on ${NODE_ENV}`);
 
-  sequelize, // connection instance (RAW queries)
-  Sequelize, // library
-};
+  DB = {
+    OTPs: OTPModel(sequelize),
+    Files: FileModel(sequelize),
+    Roles: RoleModel(sequelize),
+    Users: UserModel(sequelize),
+    UsersRoles: UserRoleModel(sequelize),
+    UsersSessions: UserSessionModel(sequelize),
+    Categories: CategoryModel(sequelize),
+    Articles: ArticleModel(sequelize),
+    ArticlesCategories: ArticleCategoryModel(sequelize),
+    ArticlesLikes: ArticleLikeModel(sequelize),
+    ArticlesComments: ArticleCommentModel(sequelize),
+    CommentsReplies: CommentReplyModel(sequelize),
+    ArticleCommentsLikes: ArticleCommentLikeModel(sequelize),
+    CommentsRepliesLikes: CommentReplyLikeModel(sequelize),
+    ArticlesBookmarks: ArticleBookmarkModel(sequelize),
+    ArticlesViews: ArticleViewModel(sequelize),
+    sequelize, // connection instance (RAW queries)
+    Sequelize, // library
+  };
+})();
+
+export { DB };

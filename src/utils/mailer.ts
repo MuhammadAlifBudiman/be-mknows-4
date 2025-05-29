@@ -10,21 +10,3 @@ export const sendEmailOTP = async (data): Promise<void> => {
 
   await sendEmail(data.email, "Email Verification", template);
 };
-
-export const sendPayment = async (data): Promise<void> => {
-  const template = await ejs.renderFile(
-    path.join(__dirname, "../../public/templates/email-verification.ejs"),
-    { data },
-  );
-
-  await sendEmail(data.email, "Email Verification", template);
-};
-
-export const sendForgetPassword = async (data): Promise<void> => {
-  const template = await ejs.renderFile(
-    path.join(__dirname, "../../public/templates/email-verification.ejs"),
-    { data },
-  );
-
-  await sendEmail(data.email, "Email Verification", template);
-};

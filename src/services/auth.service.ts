@@ -36,12 +36,7 @@ export class AuthService {
 
     try {
       const existingUser = await DB.Users.findOne({ where: { email: userData.email }, transaction });
-      
-      console.log(await DB.Users.findAll({
-        where: {
-          
-        }
-      }))
+
       if (existingUser) {
         throw new HttpException(false, 409, `This email ${userData.email} already exists`);
       }

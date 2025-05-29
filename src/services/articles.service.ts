@@ -291,7 +291,8 @@ export class ArticleService {
         categoryIds.map(categoryId => ({
           article_id: article.pk,
           category_id: categoryId
-        }), { transaction })
+        })),
+        { transaction }
       );
 
       await transaction.commit();
