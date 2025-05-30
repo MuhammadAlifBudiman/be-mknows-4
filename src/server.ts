@@ -25,4 +25,4 @@ export const app = new App([
   new ReplyRoute()
 ]);
 
-// app.listen(); // Commented out for Vercel serverless deployment
+app.listen(); 
