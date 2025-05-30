@@ -25,15 +25,13 @@ export class FileController {
 
   public getFileWithUUID = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     const { file_id } = req.params;
-
     const file = await this.file.getFileWithUUID(file_id);
-    const filepath = path.join(process.cwd(), `./uploads/${file.name}`);
-
-    if (!file || !fs.existsSync(filepath)) {
+    if (!file || !file.url) {
       throw new HttpException(false, 400, "File is not found");
     }
-
-    res.sendFile(filepath);
+    // Redirect to S3 URL or return the URL
+    res.redirect(file.url);
+    // Or: res.json({ url: file.url });
   });
 
   public getFileMine = asyncHandler(async (req: RequestWithUser, res: Response, next: NextFunction) => {

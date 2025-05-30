@@ -7,11 +7,13 @@ import { HttpException } from "@/exceptions/HttpException";
 @Service()
 export class FileService {
   public async uploadSingleFile(user_id: number, file: Express.Multer.File): Promise<File> {
+    // Save S3 URL if available
     const fileUpload = await DB.Files.create({
       user_id,
       name: file.filename,
       type: file.mimetype,
-      size: file.size
+      size: file.size,
+      url: (file as any).location || null, // S3 URL from uploadToS3
     });
 
     delete fileUpload.dataValues.pk;
@@ -23,7 +25,7 @@ export class FileService {
   
   public async getFileWithUUID(file_uuid: string): Promise<File> {
     const file = await DB.Files.findOne({
-      attributes: ["name"],
+      attributes: ["name", "url"],
       where: {
         uuid: file_uuid
       }

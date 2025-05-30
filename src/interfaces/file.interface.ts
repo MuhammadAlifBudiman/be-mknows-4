@@ -6,4 +6,5 @@ export interface File {
   user_id: number;
   type: string; 
   size: number; 
+  url?: string; // S3 URL
 }
