@@ -7,7 +7,7 @@
   "scripts": {
     "start": "cross-env NODE_ENV=production node dist/api/index.js",
     "dev": "cross-env NODE_ENV=development nodemon -L",
-    "build": "swc src -d dist --source-maps --copy-files && swc api -d dist/api --source-maps --copy-files && tsc-alias -p tsconfig.json",
+    "build": "swc src -d dist --source-maps --copy-files && tsc-alias -p tsconfig.json",
     "build:tsc": "tsc && tsc-alias",
     "test": "jest --forceExit --detectOpenHandles",
     "lint": "eslint --ignore-path .gitignore --ext .ts src/",

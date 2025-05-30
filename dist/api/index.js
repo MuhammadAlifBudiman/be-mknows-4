@@ -1,14 +1,25 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-Object.defineProperty(exports, "default", {
-    enumerable: true,
-    get: function() {
-        return _default;
-    }
-});
-const _server = require("../server");
-const _default = _server.app.app;
+// "use strict";
+// Object.defineProperty(exports, "__esModule", {
+//     value: true
+// });
+// const _server = require("../server");
+// _server.app.listen();
 
-//# sourceMappingURL=index.js.map
+// //# sourceMappingURL=index.js.map
+
+const express = require('express');
+
+const app = express()
+const PORT = 8000
+
+app.get('/', (req, res) => {
+  res.send('Hello World')
+})
+
+app.get('/about', (req, res) => {
+  res.send('About route 🎉 ')
+})
+
+app.listen(PORT, () => {
+  console.log(`✅ Server is running on port ${PORT}`);
+})
