@@ -5,7 +5,7 @@
   "author": "M-Knows Consulting",
   "license": "MIT",
   "scripts": {
-    "start": "cross-env NODE_ENV=production node dist/server.js",
+    "start": "cross-env NODE_ENV=production node dist/index.js",
     "dev": "cross-env NODE_ENV=development nodemon -L",
     "build": "swc src -d dist --source-maps --copy-files && tsc-alias -p tsconfig.json",
     "build:tsc": "tsc && tsc-alias",

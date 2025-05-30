@@ -31,4 +31,4 @@ const app = new _app.App([
 ]);
 app.listen();
 
-//# sourceMappingURL=server.js.map
+//# sourceMappingURL=index.js.map
