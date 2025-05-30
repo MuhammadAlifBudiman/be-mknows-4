@@ -1,2 +1,2 @@
 import { app } from '../server';
-app.listen();
+export default app.app; 
