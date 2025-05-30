@@ -23,7 +23,8 @@ let FileService = class FileService {
             user_id,
             name: file.filename,
             type: file.mimetype,
-            size: file.size
+            size: file.size,
+            url: file.location || null
         });
         delete fileUpload.dataValues.pk;
         delete fileUpload.dataValues.name;
@@ -33,7 +34,8 @@ let FileService = class FileService {
     async getFileWithUUID(file_uuid) {
         const file = await _database.DB.Files.findOne({
             attributes: [
-                "name"
+                "name",
+                "url"
             ],
             where: {
                 uuid: file_uuid

@@ -31,12 +31,6 @@ export class App {
     this.env = NODE_ENV || "development";
     this.port = PORT || 3000;
 
-    // Ensure uploads directory exists at startup
-    const uploadsDir = path.join(process.cwd(), "uploads");
-    if (!fs.existsSync(uploadsDir)) {
-      fs.mkdirSync(uploadsDir, { recursive: true });
-    }
-
     // Wait for DB to be ready before continuing
     this.initialize().then(() => {
       this.initializeRateLimitter();

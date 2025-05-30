@@ -18,8 +18,6 @@ const _hpp = /*#__PURE__*/ _interop_require_default(require("hpp"));
 const _morgan = /*#__PURE__*/ _interop_require_default(require("morgan"));
 const _expressuseragent = /*#__PURE__*/ _interop_require_default(require("express-useragent"));
 const _requestip = /*#__PURE__*/ _interop_require_default(require("request-ip"));
-const _fs = /*#__PURE__*/ _interop_require_default(require("fs"));
-const _path = /*#__PURE__*/ _interop_require_default(require("path"));
 const _index = require("./config/index");
 const _database = require("./database");
 const _errormiddleware = require("./middlewares/error.middleware");
@@ -132,12 +130,6 @@ let App = class App {
         this.app = (0, _express.default)();
         this.env = _index.NODE_ENV || "development";
         this.port = _index.PORT || 3000;
-        const uploadsDir = _path.default.join(process.cwd(), "uploads");
-        if (!_fs.default.existsSync(uploadsDir)) {
-            _fs.default.mkdirSync(uploadsDir, {
-                recursive: true
-            });
-        }
         this.initialize().then(()=>{
             this.initializeRateLimitter();
             this.initializeMiddlewares();
