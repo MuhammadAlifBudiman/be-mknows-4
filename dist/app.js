@@ -60,7 +60,10 @@ let App = class App {
             port: DB_PORT ? Number(DB_PORT) : undefined,
             user: DB_USER,
             password: DB_PASSWORD,
-            database: 'postgres'
+            database: 'postgres',
+            ssl: {
+                rejectUnauthorized: false
+            }
         });
         try {
             await client.connect();

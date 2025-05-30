@@ -9,6 +9,9 @@ export async function ensureDatabaseExists() {
     user: DB_USER,
     password: DB_PASSWORD,
     database: 'postgres',
+    ssl: {
+        rejectUnauthorized: false, // or true if you want strict SSL
+    },
   });
   try {
     await client.connect();
