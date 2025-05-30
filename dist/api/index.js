@@ -1,25 +1,25 @@
-// "use strict";
-// Object.defineProperty(exports, "__esModule", {
-//     value: true
-// });
-// const _server = require("../server");
-// _server.app.listen();
+"use strict";
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+const _server = require("../server");
+_server.app.listen();
 
-// //# sourceMappingURL=index.js.map
+//# sourceMappingURL=index.js.map
 
-const express = require('express');
+// const express = require('express');
 
-const app = express()
-const PORT = 8000
+// const app = express()
+// const PORT = 8000
 
-app.get('/', (req, res) => {
-  res.send('Hello World')
-})
+// app.get('/', (req, res) => {
+//   res.send('Hello World')
+// })
 
-app.get('/about', (req, res) => {
-  res.send('About route 🎉 ')
-})
+// app.get('/about', (req, res) => {
+//   res.send('About route 🎉 ')
+// })
 
-app.listen(PORT, () => {
-  console.log(`✅ Server is running on port ${PORT}`);
-})
+// app.listen(PORT, () => {
+//   console.log(`✅ Server is running on port ${PORT}`);
+// })
