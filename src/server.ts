@@ -24,5 +24,3 @@ export const app = new App([
   new CommentRoute(),
   new ReplyRoute()
 ]);
-
-app.listen(); 
