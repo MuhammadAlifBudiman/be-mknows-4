@@ -12,7 +12,6 @@ const _sequelize = require("sequelize");
 const _index = require("../config/index");
 const _logger = require("../utils/logger");
 const _database = /*#__PURE__*/ _interop_require_default(require("../config/database"));
-const _ensureDatabase = require("./ensureDatabase");
 const _otpsmodel = /*#__PURE__*/ _interop_require_default(require("../models/otps.model"));
 const _rolesmodel = /*#__PURE__*/ _interop_require_default(require("../models/roles.model"));
 const _filesmodel = /*#__PURE__*/ _interop_require_default(require("../models/files.model"));
@@ -37,7 +36,6 @@ function _interop_require_default(obj) {
 const dbConfig = _database.default[_index.NODE_ENV] || _database.default["development"];
 let DB;
 (async ()=>{
-    await (0, _ensureDatabase.ensureDatabaseExists)();
     const sequelize = new _sequelize.Sequelize(dbConfig.database, dbConfig.username, dbConfig.password, dbConfig);
     await sequelize.authenticate();
     _logger.logger.info(`=> Database Connected on ${_index.NODE_ENV}`);

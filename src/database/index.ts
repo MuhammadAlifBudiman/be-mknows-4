@@ -2,7 +2,6 @@ import { Sequelize } from "sequelize";
 import { NODE_ENV } from "@config/index";
 import { logger } from "@utils/logger";
 import config from "@config/database";
-import { ensureDatabaseExists } from "./ensureDatabase";
 import OTPModel from "@/models/otps.model";
 import RoleModel from "@models/roles.model";
 import FileModel from "@models/files.model";
@@ -26,7 +25,6 @@ const dbConfig = config[NODE_ENV] || config["development"];
 let DB: any;
 
 (async () => {
-  await ensureDatabaseExists();
 
   const sequelize = new Sequelize(
     dbConfig.database as string,

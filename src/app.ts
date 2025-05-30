@@ -52,45 +52,6 @@ export class App {
     return this.app;
   }
 
-  private async connectToDatabase() {
-    // Dynamically require 'pg' to avoid issues if not installed in production
-    const { Client } = require('pg');
-    const { DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_DATABASE } = process.env;
-
-    // Connect to the default 'postgres' database
-    const client = new Client({
-      host: DB_HOST,
-      port: DB_PORT ? Number(DB_PORT) : undefined,
-      user: DB_USER,
-      password: DB_PASSWORD,
-      database: 'postgres',
-      ssl: {
-        rejectUnauthorized: false, // or true if you want strict SSL
-      },
-    });
-
-    try {
-      await client.connect();
-      // Check if the target database exists
-      const res = await client.query(
-        'SELECT 1 FROM pg_database WHERE datname = $1',
-        [DB_DATABASE]
-      );
-      if (res.rowCount === 0) {
-        // Database does not exist, create it
-        await client.query(`CREATE DATABASE "${DB_DATABASE}"`);
-        logger.info(`Database '${DB_DATABASE}' created successfully.`);
-      } else {
-        logger.info(`Database '${DB_DATABASE}' already exists.`);
-      }
-    } catch (err: any) {
-      logger.error('Error checking/creating database: ' + err.message);
-      process.exit(1);
-    } finally {
-      await client.end();
-    }
-  }
-
   private async initialize() {
     // Wait for DB to be ready and sync models
     while (!DB || !DB.sequelize) {
