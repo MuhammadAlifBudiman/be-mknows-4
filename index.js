@@ -8,7 +8,7 @@ Object.defineProperty(exports, "default", {
         return _default;
     }
 });
-const _server = require("./dist/serverer");
+const _server = require("./dist/server");
 const _default = _server.app.app;
 
 //# sourceMappingURL=index.js.map
