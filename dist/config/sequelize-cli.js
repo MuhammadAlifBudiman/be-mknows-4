@@ -12,7 +12,14 @@ module.exports = {
     host: DB_HOST,
     dialect: 'postgres',
     migrationStorageTableName: 'sequelize_migrations',
-    seederStorageTableName: 'sequelize_seeds'
+    seederStorageTableName: 'sequelize_seeds',
+    ssl: true,
+    dialectOptions: {
+        ssl: {
+            require: true,
+            rejectUnauthorized: false
+        }
+    }
 };
 
 //# sourceMappingURL=sequelize-cli.js.map

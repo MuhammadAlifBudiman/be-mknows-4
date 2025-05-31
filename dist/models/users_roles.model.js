@@ -19,23 +19,7 @@ _export(exports, {
 const _sequelize = require("sequelize");
 const _rolesmodel = require("./roles.model");
 const _usersmodel = require("./users.model");
-function _define_property(obj, key, value) {
-    if (key in obj) {
-        Object.defineProperty(obj, key, {
-            value: value,
-            enumerable: true,
-            configurable: true,
-            writable: true
-        });
-    } else {
-        obj[key] = value;
-    }
-    return obj;
-}
 let UserRoleModel = class UserRoleModel extends _sequelize.Model {
-    constructor(...args){
-        super(...args), _define_property(this, "user_id", void 0), _define_property(this, "role_id", void 0), _define_property(this, "role", void 0), _define_property(this, "created_at", void 0), _define_property(this, "updated_at", void 0), _define_property(this, "deleted_at", void 0);
-    }
 };
 function _default(sequelize) {
     UserRoleModel.init({
