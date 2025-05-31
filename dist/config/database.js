@@ -18,9 +18,7 @@ module.exports = {
         },
         pool: {
             min: 0,
-            max: 5,
-            acquire: 30000,
-            idle: 10000
+            max: 5
         },
         logQueryParameters: NODE_ENV === "development",
         logging: false,
