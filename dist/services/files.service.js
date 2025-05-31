@@ -9,7 +9,7 @@ Object.defineProperty(exports, "FileService", {
     }
 });
 const _typedi = require("typedi");
-const _database = require("../database");
+const _dblazy = require("../database/db-lazy");
 const _HttpException = require("../exceptions/HttpException");
 function _ts_decorate(decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -19,7 +19,8 @@ function _ts_decorate(decorators, target, key, desc) {
 }
 let FileService = class FileService {
     async uploadSingleFile(user_id, file) {
-        const fileUpload = await _database.DB.Files.create({
+        const DB = await (0, _dblazy.getDB)();
+        const fileUpload = await DB.Files.create({
             user_id,
             name: file.filename,
             type: file.mimetype,
@@ -32,7 +33,8 @@ let FileService = class FileService {
         return fileUpload;
     }
     async getFileWithUUID(file_uuid) {
-        const file = await _database.DB.Files.findOne({
+        const DB = await (0, _dblazy.getDB)();
+        const file = await DB.Files.findOne({
             attributes: [
                 "name",
                 "url"
@@ -45,7 +47,8 @@ let FileService = class FileService {
         return file;
     }
     async getUserFiles(user_id) {
-        const files = await _database.DB.Files.findAll({
+        const DB = await (0, _dblazy.getDB)();
+        const files = await DB.Files.findAll({
             attributes: {
                 exclude: [
                     "pk",

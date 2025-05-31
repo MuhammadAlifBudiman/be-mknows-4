@@ -19,10 +19,10 @@ const _morgan = /*#__PURE__*/ _interop_require_default(require("morgan"));
 const _expressuseragent = /*#__PURE__*/ _interop_require_default(require("express-useragent"));
 const _requestip = /*#__PURE__*/ _interop_require_default(require("request-ip"));
 const _index = require("./config/index");
-const _database = require("./database");
 const _errormiddleware = require("./middlewares/error.middleware");
 const _ratelimittermiddleware = /*#__PURE__*/ _interop_require_default(require("./middlewares/rate-limitter.middleware"));
 const _logger = require("./utils/logger");
+const _dblazy = require("./database/db-lazy");
 function _define_property(obj, key, value) {
     if (key in obj) {
         Object.defineProperty(obj, key, {
@@ -51,15 +51,6 @@ let App = class App {
     }
     getServer() {
         return this.app;
-    }
-    async initialize() {
-        while(!_database.DB || !_database.DB.sequelize){
-            await new Promise((resolve)=>setTimeout(resolve, 100));
-        }
-        await _database.DB.sequelize.sync({
-            alter: true,
-            force: false
-        });
     }
     initializeMiddlewares() {
         this.app.use((0, _morgan.default)(_index.LOG_FORMAT, {
@@ -102,12 +93,21 @@ let App = class App {
         this.app = (0, _express.default)();
         this.env = _index.NODE_ENV || "development";
         this.port = _index.PORT || 3000;
-        this.initialize().then(()=>{
-            this.initializeRateLimitter();
-            this.initializeMiddlewares();
-            this.initializeRoutes(routes);
-            this.initializeErrorHandling();
+        this.app.use(async (req, res, next)=>{
+            try {
+                await (0, _dblazy.getDB)();
+                next();
+            } catch (err) {
+                _logger.logger.error("DB initialization failed: " + err.message);
+                res.status(500).json({
+                    message: "Database initialization failed"
+                });
+            }
         });
+        this.initializeRateLimitter();
+        this.initializeMiddlewares();
+        this.initializeRoutes(routes);
+        this.initializeErrorHandling();
     }
 };
 

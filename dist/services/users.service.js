@@ -10,7 +10,7 @@ Object.defineProperty(exports, "UserService", {
 });
 const _bcrypt = require("bcrypt");
 const _typedi = require("typedi");
-const _database = require("../database");
+const _dblazy = require("../database/db-lazy");
 const _HttpException = require("../exceptions/HttpException");
 function _define_property(obj, key, value) {
     if (key in obj) {
@@ -72,45 +72,50 @@ function _ts_decorate(decorators, target, key, desc) {
 }
 let UserService = class UserService {
     async findAllUser() {
-        const allUser = await _database.DB.Users.findAll();
+        const db = await (0, _dblazy.getDB)();
+        const allUser = await db.Users.findAll();
         return allUser;
     }
     async findUserById(userId) {
-        const findUser = await _database.DB.Users.findByPk(userId);
+        const db = await (0, _dblazy.getDB)();
+        const findUser = await db.Users.findByPk(userId);
         if (!findUser) throw new _HttpException.HttpException(false, 409, "User doesn't exist");
         return findUser;
     }
     async createUser(userData) {
-        const findUser = await _database.DB.Users.findOne({
+        const db = await (0, _dblazy.getDB)();
+        const findUser = await db.Users.findOne({
             where: {
                 email: userData.email
             }
         });
         if (findUser) throw new _HttpException.HttpException(false, 409, `This email ${userData.email} already exists`);
         const hashedPassword = await (0, _bcrypt.hash)(userData.password, 10);
-        const createUserData = await _database.DB.Users.create(_object_spread_props(_object_spread({}, userData), {
+        const createUserData = await db.Users.create(_object_spread_props(_object_spread({}, userData), {
             password: hashedPassword
         }));
         return createUserData;
     }
     async updateUser(userId, userData) {
-        const findUser = await _database.DB.Users.findByPk(userId);
+        const db = await (0, _dblazy.getDB)();
+        const findUser = await db.Users.findByPk(userId);
         if (!findUser) throw new _HttpException.HttpException(false, 409, "User doesn't exist");
         const hashedPassword = await (0, _bcrypt.hash)(userData.password, 10);
-        await _database.DB.Users.update(_object_spread_props(_object_spread({}, userData), {
+        await db.Users.update(_object_spread_props(_object_spread({}, userData), {
             password: hashedPassword
         }), {
             where: {
                 pk: userId
             }
         });
-        const updateUser = await _database.DB.Users.findByPk(userId);
+        const updateUser = await db.Users.findByPk(userId);
         return updateUser;
     }
     async deleteUser(userId) {
-        const findUser = await _database.DB.Users.findByPk(userId);
+        const db = await (0, _dblazy.getDB)();
+        const findUser = await db.Users.findByPk(userId);
         if (!findUser) throw new _HttpException.HttpException(false, 409, "User doesn't exist");
-        await _database.DB.Users.destroy({
+        await db.Users.destroy({
             where: {
                 pk: userId
             }

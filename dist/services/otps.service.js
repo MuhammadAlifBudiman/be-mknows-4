@@ -9,7 +9,7 @@ Object.defineProperty(exports, "OTPService", {
     }
 });
 const _typedi = require("typedi");
-const _database = require("../database");
+const _dblazy = require("../database/db-lazy");
 const _HttpException = require("../exceptions/HttpException");
 function _ts_decorate(decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -22,7 +22,7 @@ let OTPService = class OTPService {
         const key = Math.floor(Math.pow(10, 8 - 1) + Math.random() * 9 * Math.pow(10, 8 - 1)).toString();
         const currentDateTime = new Date();
         const expirationTime = new Date(currentDateTime.getTime() + validInMinutes * 60000);
-        const otp = await _database.DB.OTPs.create({
+        const otp = await (await (0, _dblazy.getDB)()).OTPs.create({
             user_id: data.user_id,
             key,
             type: data.type,
@@ -34,7 +34,7 @@ let OTPService = class OTPService {
         return otp;
     }
     async findOTP(data) {
-        const otp = await _database.DB.OTPs.findOne({
+        const otp = await (await (0, _dblazy.getDB)()).OTPs.findOne({
             where: {
                 user_id: data.user_id,
                 key: data.key,

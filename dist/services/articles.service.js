@@ -10,7 +10,7 @@ Object.defineProperty(exports, "ArticleService", {
 });
 const _sequelize = require("sequelize");
 const _typedi = require("typedi");
-const _database = require("../database");
+const _dblazy = require("../database/db-lazy");
 const _HttpException = require("../exceptions/HttpException");
 function _ts_decorate(decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -83,14 +83,14 @@ let ArticleService = class ArticleService {
                 ]);
             }
         }
-        const { rows: articles, count } = await _database.DB.Articles.findAndCountAll({
+        const { rows: articles, count } = await (await (0, _dblazy.getDB)()).Articles.findAndCountAll({
             where,
             limit: parseInt(limit),
             offset,
             order: orderClause
         });
-        const likeCountPromises = articles.map((article)=>{
-            return _database.DB.ArticlesLikes.count({
+        const likeCountPromises = articles.map(async (article)=>{
+            return (await (0, _dblazy.getDB)()).ArticlesLikes.count({
                 where: {
                     article_id: article.pk
                 }
@@ -100,8 +100,8 @@ let ArticleService = class ArticleService {
         articles.forEach((article, index)=>{
             article.likes = likeCounts[index];
         });
-        const commentCountPromises = articles.map((article)=>{
-            return _database.DB.ArticlesComments.count({
+        const commentCountPromises = articles.map(async (article)=>{
+            return (await (0, _dblazy.getDB)()).ArticlesComments.count({
                 where: {
                     article_id: article.pk
                 }
@@ -111,8 +111,8 @@ let ArticleService = class ArticleService {
         articles.forEach((article, index)=>{
             article.comments = commentCounts[index];
         });
-        const viewCountPromises = articles.map((article)=>{
-            return _database.DB.ArticlesViews.count({
+        const viewCountPromises = articles.map(async (article)=>{
+            return (await (0, _dblazy.getDB)()).ArticlesViews.count({
                 where: {
                     article_id: article.pk
                 }
@@ -122,8 +122,8 @@ let ArticleService = class ArticleService {
         articles.forEach((article, index)=>{
             article.views = viewCounts[index];
         });
-        const bookmarkCountPromises = articles.map((article)=>{
-            return _database.DB.ArticlesBookmarks.count({
+        const bookmarkCountPromises = articles.map(async (article)=>{
+            return (await (0, _dblazy.getDB)()).ArticlesBookmarks.count({
                 where: {
                     article_id: article.pk
                 }
@@ -146,7 +146,7 @@ let ArticleService = class ArticleService {
         };
     }
     async getArticleById(article_id) {
-        const article = await _database.DB.Articles.findOne({
+        const article = await (await (0, _dblazy.getDB)()).Articles.findOne({
             where: {
                 uuid: article_id
             }
@@ -154,25 +154,25 @@ let ArticleService = class ArticleService {
         if (!article) {
             throw new _HttpException.HttpException(false, 404, "Article is not found");
         }
-        const likesCount = await _database.DB.ArticlesLikes.count({
+        const likesCount = await (await (0, _dblazy.getDB)()).ArticlesLikes.count({
             where: {
                 article_id: article.pk
             }
         });
         article.likes = likesCount;
-        const commentsCount = await _database.DB.ArticlesComments.count({
+        const commentsCount = await (await (0, _dblazy.getDB)()).ArticlesComments.count({
             where: {
                 article_id: article.pk
             }
         });
         article.comments = commentsCount;
-        const viewCount = await _database.DB.ArticlesViews.count({
+        const viewCount = await (await (0, _dblazy.getDB)()).ArticlesViews.count({
             where: {
                 article_id: article.pk
             }
         });
         article.views = viewCount;
-        const bookmarkCount = await _database.DB.ArticlesBookmarks.count({
+        const bookmarkCount = await (await (0, _dblazy.getDB)()).ArticlesBookmarks.count({
             where: {
                 article_id: article.pk
             }
@@ -182,7 +182,7 @@ let ArticleService = class ArticleService {
         return response;
     }
     async getArticlesByCategory(query, category_id) {
-        const category = await _database.DB.Categories.findOne({
+        const category = await (await (0, _dblazy.getDB)()).Categories.findOne({
             attributes: [
                 "pk"
             ],
@@ -193,7 +193,7 @@ let ArticleService = class ArticleService {
         if (!category) {
             throw new _HttpException.HttpException(false, 400, "Category is not found");
         }
-        const articlesCategory = await _database.DB.ArticlesCategories.findAll({
+        const articlesCategory = await (await (0, _dblazy.getDB)()).ArticlesCategories.findAll({
             attributes: [
                 "article_id"
             ],
@@ -205,15 +205,15 @@ let ArticleService = class ArticleService {
             throw new _HttpException.HttpException(false, 400, "Article with that category is not found");
         }
         const articleIds = articlesCategory.map((articleCategory)=>articleCategory.article_id);
-        const { rows: articles } = await _database.DB.Articles.findAndCountAll({
+        const { rows: articles } = await (await (0, _dblazy.getDB)()).Articles.findAndCountAll({
             where: {
                 pk: {
                     [_sequelize.Op.in]: articleIds
                 }
             }
         });
-        const likeCountPromises = articles.map((article)=>{
-            return _database.DB.ArticlesLikes.count({
+        const likeCountPromises = articles.map(async (article)=>{
+            return (await (0, _dblazy.getDB)()).ArticlesLikes.count({
                 where: {
                     article_id: article.pk
                 }
@@ -223,8 +223,8 @@ let ArticleService = class ArticleService {
         articles.forEach((article, index)=>{
             article.likes = likeCounts[index];
         });
-        const commentCountPromises = articles.map((article)=>{
-            return _database.DB.ArticlesComments.count({
+        const commentCountPromises = articles.map(async (article)=>{
+            return (await (0, _dblazy.getDB)()).ArticlesComments.count({
                 where: {
                     article_id: article.pk
                 }
@@ -234,8 +234,8 @@ let ArticleService = class ArticleService {
         articles.forEach((article, index)=>{
             article.comments = commentCounts[index];
         });
-        const viewCountPromises = articles.map((article)=>{
-            return _database.DB.ArticlesViews.count({
+        const viewCountPromises = articles.map(async (article)=>{
+            return (await (0, _dblazy.getDB)()).ArticlesViews.count({
                 where: {
                     article_id: article.pk
                 }
@@ -245,8 +245,8 @@ let ArticleService = class ArticleService {
         articles.forEach((article, index)=>{
             article.views = viewCounts[index];
         });
-        const bookmarkCountPromises = articles.map((article)=>{
-            return _database.DB.ArticlesBookmarks.count({
+        const bookmarkCountPromises = articles.map(async (article)=>{
+            return (await (0, _dblazy.getDB)()).ArticlesBookmarks.count({
                 where: {
                     article_id: article.pk
                 }
@@ -263,7 +263,7 @@ let ArticleService = class ArticleService {
         };
     }
     async createArticle(author_id, data) {
-        const thumbnail = await _database.DB.Files.findOne({
+        const thumbnail = await (await (0, _dblazy.getDB)()).Files.findOne({
             attributes: [
                 "pk"
             ],
@@ -272,7 +272,7 @@ let ArticleService = class ArticleService {
             }
         });
         if (!thumbnail) throw new _HttpException.HttpException(false, 404, "File is not found");
-        const categories = await _database.DB.Categories.findAll({
+        const categories = await (await (0, _dblazy.getDB)()).Categories.findAll({
             attributes: [
                 "pk"
             ],
@@ -285,9 +285,9 @@ let ArticleService = class ArticleService {
         if (categories.length <= 0) {
             throw new _HttpException.HttpException(false, 404, "Categories is not found");
         }
-        const transaction = await _database.DB.sequelize.transaction();
+        const transaction = await (await (0, _dblazy.getDB)()).sequelize.transaction();
         try {
-            const article = await _database.DB.Articles.create({
+            const article = await (await (0, _dblazy.getDB)()).Articles.create({
                 title: data.title,
                 description: data.description,
                 content: data.content,
@@ -297,7 +297,7 @@ let ArticleService = class ArticleService {
                 transaction
             });
             const categoryIds = categories.map((category)=>category.pk);
-            await _database.DB.ArticlesCategories.bulkCreate(categoryIds.map((categoryId)=>({
+            await (await (0, _dblazy.getDB)()).ArticlesCategories.bulkCreate(categoryIds.map((categoryId)=>({
                     article_id: article.pk,
                     category_id: categoryId
                 })), {
@@ -311,7 +311,7 @@ let ArticleService = class ArticleService {
         }
     }
     async updateArticle(article_id, author_id, data) {
-        const article = await _database.DB.Articles.findOne({
+        const article = await (await (0, _dblazy.getDB)()).Articles.findOne({
             where: {
                 uuid: article_id
             }
@@ -324,7 +324,7 @@ let ArticleService = class ArticleService {
         if (data.description) updatedData.description = data.description;
         if (data.content) updatedData.content = data.content;
         if (data.thumbnail) {
-            const file = await _database.DB.Files.findOne({
+            const file = await (await (0, _dblazy.getDB)()).Files.findOne({
                 attributes: [
                     "pk"
                 ],
@@ -341,10 +341,10 @@ let ArticleService = class ArticleService {
         if (Object.keys(updatedData).length === 0) {
             throw new _HttpException.HttpException(false, 400, "Some field is required");
         }
-        const transaction = await _database.DB.sequelize.transaction();
+        const transaction = await (await (0, _dblazy.getDB)()).sequelize.transaction();
         try {
             if (data.categories) {
-                const categories = await _database.DB.Categories.findAll({
+                const categories = await (await (0, _dblazy.getDB)()).Categories.findAll({
                     attributes: [
                         "pk"
                     ],
@@ -358,7 +358,7 @@ let ArticleService = class ArticleService {
                     throw new _HttpException.HttpException(false, 400, "Some categories are not found or duplicated");
                 }
                 if (categories.length >= 0) {
-                    await _database.DB.ArticlesCategories.destroy({
+                    await (await (0, _dblazy.getDB)()).ArticlesCategories.destroy({
                         where: {
                             article_id: article.pk
                         },
@@ -366,7 +366,7 @@ let ArticleService = class ArticleService {
                         transaction
                     });
                     const categoryIds = categories.map((category)=>category.pk);
-                    await _database.DB.ArticlesCategories.bulkCreate(categoryIds.map((categoryId)=>({
+                    await (await (0, _dblazy.getDB)()).ArticlesCategories.bulkCreate(categoryIds.map((categoryId)=>({
                             article_id: article.pk,
                             category_id: categoryId
                         })), {
@@ -375,7 +375,7 @@ let ArticleService = class ArticleService {
                 }
             }
             if (Object.keys(updatedData).length > 0) {
-                await _database.DB.Articles.update(updatedData, {
+                await (await (0, _dblazy.getDB)()).Articles.update(updatedData, {
                     where: {
                         uuid: article_id
                     },
@@ -391,7 +391,7 @@ let ArticleService = class ArticleService {
         }
     }
     async deleteArticle(article_id, author_id) {
-        const article = await _database.DB.Articles.findOne({
+        const article = await (await (0, _dblazy.getDB)()).Articles.findOne({
             where: {
                 uuid: article_id,
                 author_id
@@ -400,7 +400,7 @@ let ArticleService = class ArticleService {
         if (!article) {
             throw new _HttpException.HttpException(false, 400, "Article is not found");
         }
-        const comments = await _database.DB.ArticlesComments.findAll({
+        const comments = await (await (0, _dblazy.getDB)()).ArticlesComments.findAll({
             attributes: [
                 "pk"
             ],
@@ -409,7 +409,7 @@ let ArticleService = class ArticleService {
             }
         });
         const commentIds = comments.map((comment)=>comment.pk);
-        const replies = await _database.DB.CommentsReplies.findAll({
+        const replies = await (await (0, _dblazy.getDB)()).CommentsReplies.findAll({
             attributes: [
                 "pk"
             ],
@@ -420,37 +420,37 @@ let ArticleService = class ArticleService {
             }
         });
         const replyIds = replies.map((reply)=>reply.pk);
-        const transaction = await _database.DB.sequelize.transaction();
+        const transaction = await (await (0, _dblazy.getDB)()).sequelize.transaction();
         try {
             await article.destroy({
                 transaction
             });
             await Promise.all([
-                _database.DB.ArticlesCategories.destroy({
+                (await (0, _dblazy.getDB)()).ArticlesCategories.destroy({
                     where: {
                         article_id: article.pk
                     },
                     transaction
                 }),
-                _database.DB.ArticlesLikes.destroy({
+                (await (0, _dblazy.getDB)()).ArticlesLikes.destroy({
                     where: {
                         article_id: article.pk
                     },
                     transaction
                 }),
-                _database.DB.ArticlesBookmarks.destroy({
+                (await (0, _dblazy.getDB)()).ArticlesBookmarks.destroy({
                     where: {
                         article_id: article.pk
                     },
                     transaction
                 }),
-                _database.DB.ArticlesComments.destroy({
+                (await (0, _dblazy.getDB)()).ArticlesComments.destroy({
                     where: {
                         article_id: article.pk
                     },
                     transaction
                 }),
-                _database.DB.ArticleCommentsLikes.destroy({
+                (await (0, _dblazy.getDB)()).ArticleCommentsLikes.destroy({
                     where: {
                         comment_id: {
                             [_sequelize.Op.in]: commentIds
@@ -458,7 +458,7 @@ let ArticleService = class ArticleService {
                     },
                     transaction
                 }),
-                _database.DB.CommentsReplies.destroy({
+                (await (0, _dblazy.getDB)()).CommentsReplies.destroy({
                     where: {
                         comment_id: {
                             [_sequelize.Op.in]: commentIds
@@ -466,7 +466,7 @@ let ArticleService = class ArticleService {
                     },
                     transaction
                 }),
-                _database.DB.CommentsRepliesLikes.destroy({
+                (await (0, _dblazy.getDB)()).CommentsRepliesLikes.destroy({
                     where: {
                         reply_id: {
                             [_sequelize.Op.in]: replyIds
@@ -483,7 +483,7 @@ let ArticleService = class ArticleService {
         }
     }
     async likeArticle(user_id, article_id) {
-        const article = await _database.DB.Articles.findOne({
+        const article = await (await (0, _dblazy.getDB)()).Articles.findOne({
             attributes: [
                 "pk"
             ],
@@ -494,17 +494,17 @@ let ArticleService = class ArticleService {
         if (!article) {
             throw new _HttpException.HttpException(false, 400, "Article is not found");
         }
-        const transaction = await _database.DB.sequelize.transaction();
+        const transaction = await (await (0, _dblazy.getDB)()).sequelize.transaction();
         try {
             const [articleLike, articleLikesCount] = await Promise.all([
-                _database.DB.ArticlesLikes.findOne({
+                (await (0, _dblazy.getDB)()).ArticlesLikes.findOne({
                     where: {
                         article_id: article.pk,
                         user_id
                     },
                     transaction
                 }),
-                _database.DB.ArticlesLikes.count({
+                (await (0, _dblazy.getDB)()).ArticlesLikes.count({
                     where: {
                         article_id: article.pk,
                         user_id
@@ -513,7 +513,7 @@ let ArticleService = class ArticleService {
                 })
             ]);
             if (!articleLike) {
-                await _database.DB.ArticlesLikes.create({
+                await (await (0, _dblazy.getDB)()).ArticlesLikes.create({
                     article_id: article.pk,
                     user_id
                 }, {
@@ -526,7 +526,7 @@ let ArticleService = class ArticleService {
                     likes: articleLikesCount + 1
                 };
             } else {
-                await _database.DB.ArticlesLikes.destroy({
+                await (await (0, _dblazy.getDB)()).ArticlesLikes.destroy({
                     where: {
                         article_id: article.pk,
                         user_id
@@ -547,7 +547,7 @@ let ArticleService = class ArticleService {
         }
     }
     async bookmarkArticle(user_id, article_id) {
-        const article = await _database.DB.Articles.findOne({
+        const article = await (await (0, _dblazy.getDB)()).Articles.findOne({
             attributes: [
                 "pk"
             ],
@@ -558,17 +558,17 @@ let ArticleService = class ArticleService {
         if (!article) {
             throw new _HttpException.HttpException(false, 400, "Article is not found");
         }
-        const transaction = await _database.DB.sequelize.transaction();
+        const transaction = await (await (0, _dblazy.getDB)()).sequelize.transaction();
         try {
             const [articleBookmark, articleBookmarksCount] = await Promise.all([
-                _database.DB.ArticlesBookmarks.findOne({
+                (await (0, _dblazy.getDB)()).ArticlesBookmarks.findOne({
                     where: {
                         article_id: article.pk,
                         user_id
                     },
                     transaction
                 }),
-                _database.DB.ArticlesBookmarks.count({
+                (await (0, _dblazy.getDB)()).ArticlesBookmarks.count({
                     where: {
                         article_id: article.pk,
                         user_id
@@ -577,7 +577,7 @@ let ArticleService = class ArticleService {
                 })
             ]);
             if (!articleBookmark) {
-                await _database.DB.ArticlesBookmarks.create({
+                await (await (0, _dblazy.getDB)()).ArticlesBookmarks.create({
                     article_id: article.pk,
                     user_id
                 }, {
@@ -590,7 +590,7 @@ let ArticleService = class ArticleService {
                     bookmarks: articleBookmarksCount + 1
                 };
             } else {
-                await _database.DB.ArticlesBookmarks.destroy({
+                await (await (0, _dblazy.getDB)()).ArticlesBookmarks.destroy({
                     where: {
                         article_id: article.pk,
                         user_id
@@ -611,7 +611,7 @@ let ArticleService = class ArticleService {
         }
     }
     async getBookmarkByMe(user_id) {
-        const articleBookmark = await _database.DB.ArticlesBookmarks.findAll({
+        const articleBookmark = await (await (0, _dblazy.getDB)()).ArticlesBookmarks.findAll({
             attributes: [
                 "article_id"
             ],
@@ -620,7 +620,7 @@ let ArticleService = class ArticleService {
             }
         });
         const articleIds = articleBookmark.map((articleBookmark)=>articleBookmark.article_id);
-        const articles = await _database.DB.Articles.findAll({
+        const articles = await (await (0, _dblazy.getDB)()).Articles.findAll({
             where: {
                 pk: {
                     [_sequelize.Op.in]: articleIds
@@ -630,8 +630,8 @@ let ArticleService = class ArticleService {
         if (!articleBookmark) {
             throw new _HttpException.HttpException(false, 400, "Bookmark is empty");
         }
-        const likeCountPromises = articles.map((article)=>{
-            return _database.DB.ArticlesLikes.count({
+        const likeCountPromises = articles.map(async (article)=>{
+            return (await (0, _dblazy.getDB)()).ArticlesLikes.count({
                 where: {
                     article_id: article.pk
                 }
@@ -641,8 +641,8 @@ let ArticleService = class ArticleService {
         articles.forEach((article, index)=>{
             article.likes = likeCounts[index];
         });
-        const commentCountPromises = articles.map((article)=>{
-            return _database.DB.ArticlesComments.count({
+        const commentCountPromises = articles.map(async (article)=>{
+            return (await (0, _dblazy.getDB)()).ArticlesComments.count({
                 where: {
                     article_id: article.pk
                 }
@@ -658,7 +658,7 @@ let ArticleService = class ArticleService {
         };
     }
     async addView(article_id, user_id) {
-        const article = await _database.DB.Articles.findOne({
+        const article = await (await (0, _dblazy.getDB)()).Articles.findOne({
             attributes: [
                 "pk"
             ],
@@ -669,13 +669,13 @@ let ArticleService = class ArticleService {
         if (!article) {
             throw new _HttpException.HttpException(false, 400, "Article is not found");
         }
-        _database.DB.ArticlesViews.create({
+        (await (0, _dblazy.getDB)()).ArticlesViews.create({
             article_id: article.pk,
             user_id
         });
         const startDate = new Date("2023-01-01");
         const endDate = new Date("2023-12-31");
-        console.log(await _database.DB.ArticlesViews.count({
+        console.log(await (await (0, _dblazy.getDB)()).ArticlesViews.count({
             where: {
                 created_at: {
                     [_sequelize.Op.and]: [
@@ -694,7 +694,7 @@ let ArticleService = class ArticleService {
     async getPopularArticles(query) {
         const { range } = query;
         const startDate = this.calculateStartDate(range);
-        const articleViews = await _database.DB.ArticlesViews.findAll({
+        const articleViews = await (await (0, _dblazy.getDB)()).ArticlesViews.findAll({
             attributes: [
                 'article_id'
             ],
@@ -708,7 +708,7 @@ let ArticleService = class ArticleService {
             throw new _HttpException.HttpException(false, 400, "There is no popular article");
         }
         const articleIds = articleViews.map((articleView)=>articleView.article_id);
-        const articles = await _database.DB.Articles.findAll({
+        const articles = await (await (0, _dblazy.getDB)()).Articles.findAll({
             where: {
                 pk: {
                     [_sequelize.Op.in]: articleIds
@@ -716,7 +716,7 @@ let ArticleService = class ArticleService {
             }
         });
         const likeCountPromises = articles.map(async (article)=>{
-            const count = await _database.DB.ArticlesLikes.count({
+            const count = await (await (0, _dblazy.getDB)()).ArticlesLikes.count({
                 where: {
                     article_id: article.pk,
                     created_at: {
@@ -727,7 +727,7 @@ let ArticleService = class ArticleService {
             return count;
         });
         const commentCountPromises = articles.map(async (article)=>{
-            const count = await _database.DB.ArticlesComments.count({
+            const count = await (await (0, _dblazy.getDB)()).ArticlesComments.count({
                 where: {
                     article_id: article.pk,
                     created_at: {
@@ -738,7 +738,7 @@ let ArticleService = class ArticleService {
             return count;
         });
         const viewCountPromises = articles.map(async (article)=>{
-            const count = await _database.DB.ArticlesViews.count({
+            const count = await (await (0, _dblazy.getDB)()).ArticlesViews.count({
                 where: {
                     article_id: article.pk,
                     created_at: {
@@ -749,7 +749,7 @@ let ArticleService = class ArticleService {
             return count;
         });
         const bookmarkCountPromises = articles.map(async (article)=>{
-            const count = await _database.DB.ArticlesBookmarks.count({
+            const count = await (await (0, _dblazy.getDB)()).ArticlesBookmarks.count({
                 where: {
                     article_id: article.pk,
                     created_at: {
@@ -785,7 +785,7 @@ let ArticleService = class ArticleService {
         });
         const totalLikePromises = sortedArticles.map(async (article)=>{
             const articleId = article.uuid;
-            const articlePk = await _database.DB.Articles.findOne({
+            const articlePk = await (await (0, _dblazy.getDB)()).Articles.findOne({
                 attributes: [
                     "pk"
                 ],
@@ -793,7 +793,7 @@ let ArticleService = class ArticleService {
                     uuid: articleId
                 }
             });
-            return _database.DB.ArticlesLikes.count({
+            return (await (0, _dblazy.getDB)()).ArticlesLikes.count({
                 where: {
                     article_id: articlePk.pk
                 }
@@ -801,7 +801,7 @@ let ArticleService = class ArticleService {
         });
         const totalCommentPromises = sortedArticles.map(async (article)=>{
             const articleId = article.uuid;
-            const articlePk = await _database.DB.Articles.findOne({
+            const articlePk = await (await (0, _dblazy.getDB)()).Articles.findOne({
                 attributes: [
                     "pk"
                 ],
@@ -809,7 +809,7 @@ let ArticleService = class ArticleService {
                     uuid: articleId
                 }
             });
-            return _database.DB.ArticlesComments.count({
+            return (await (0, _dblazy.getDB)()).ArticlesComments.count({
                 where: {
                     article_id: articlePk.pk
                 }
@@ -817,7 +817,7 @@ let ArticleService = class ArticleService {
         });
         const totalViewPromises = sortedArticles.map(async (article)=>{
             const articleId = article.uuid;
-            const articlePk = await _database.DB.Articles.findOne({
+            const articlePk = await (await (0, _dblazy.getDB)()).Articles.findOne({
                 attributes: [
                     "pk"
                 ],
@@ -825,7 +825,7 @@ let ArticleService = class ArticleService {
                     uuid: articleId
                 }
             });
-            return _database.DB.ArticlesViews.count({
+            return (await (0, _dblazy.getDB)()).ArticlesViews.count({
                 where: {
                     article_id: articlePk.pk
                 }
@@ -833,7 +833,7 @@ let ArticleService = class ArticleService {
         });
         const totalBookmarkPromises = sortedArticles.map(async (article)=>{
             const articleId = article.uuid;
-            const articlePk = await _database.DB.Articles.findOne({
+            const articlePk = await (await (0, _dblazy.getDB)()).Articles.findOne({
                 attributes: [
                     "pk"
                 ],
@@ -841,7 +841,7 @@ let ArticleService = class ArticleService {
                     uuid: articleId
                 }
             });
-            return _database.DB.ArticlesBookmarks.count({
+            return (await (0, _dblazy.getDB)()).ArticlesBookmarks.count({
                 where: {
                     article_id: articlePk.pk
                 }

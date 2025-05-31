@@ -12,12 +12,11 @@ import fs from "fs";
 import path from "path";
 
 import { NODE_ENV, PORT, LOG_FORMAT, ORIGIN, CREDENTIALS } from "@config/index";
-import { DB } from "@database";
 import { Routes } from "@interfaces/routes.interface";
 import { ErrorMiddleware } from "@middlewares/error.middleware";
 import RateLimitter from "@middlewares/rate-limitter.middleware";
-
 import { logger, stream } from "@utils/logger";
+import { getDB } from "@/database/db-lazy";
 
 export class App {
   public app: express.Application;
@@ -31,13 +30,21 @@ export class App {
     this.env = NODE_ENV || "development";
     this.port = PORT || 3000;
 
-    // Wait for DB to be ready before continuing
-    this.initialize().then(() => {
-      this.initializeRateLimitter();
-      this.initializeMiddlewares();
-      this.initializeRoutes(routes);
-      this.initializeErrorHandling();
+    // Add DB initialization middleware
+    this.app.use(async (req, res, next) => {
+      try {
+        await getDB();
+        next();
+      } catch (err) {
+        logger.error("DB initialization failed: " + err.message);
+        res.status(500).json({ message: "Database initialization failed" });
+      }
     });
+
+    this.initializeRateLimitter();
+    this.initializeMiddlewares();
+    this.initializeRoutes(routes);
+    this.initializeErrorHandling();
   }
 
   public listen() {
@@ -50,14 +57,6 @@ export class App {
 
   public getServer() {
     return this.app;
-  }
-
-  private async initialize() {
-    // Wait for DB to be ready and sync models
-    while (!DB || !DB.sequelize) {
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
-    await DB.sequelize.sync({ alter: true, force: false });
   }
 
   private initializeMiddlewares() {

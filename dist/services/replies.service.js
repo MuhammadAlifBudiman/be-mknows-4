@@ -8,7 +8,7 @@ Object.defineProperty(exports, "ReplyService", {
         return ReplyService;
     }
 });
-const _database = require("../database");
+const _dblazy = require("../database/db-lazy");
 const _HttpException = require("../exceptions/HttpException");
 const _typedi = require("typedi");
 function _define_property(obj, key, value) {
@@ -64,9 +64,10 @@ let ReplyService = class ReplyService {
         };
     }
     async getReplies() {
-        const reply = await _database.DB.CommentsReplies.findAll({});
+        const DB = await (0, _dblazy.getDB)();
+        const reply = await DB.CommentsReplies.findAll({});
         const likeCountPromises = reply.map((reply)=>{
-            return _database.DB.CommentsRepliesLikes.count({
+            return DB.CommentsRepliesLikes.count({
                 where: {
                     reply_id: reply.pk
                 }
@@ -82,7 +83,8 @@ let ReplyService = class ReplyService {
         };
     }
     async getRepliesByComment(comment_id) {
-        const comment = await _database.DB.ArticlesComments.findOne({
+        const DB = await (0, _dblazy.getDB)();
+        const comment = await DB.ArticlesComments.findOne({
             where: {
                 uuid: comment_id
             },
@@ -93,7 +95,7 @@ let ReplyService = class ReplyService {
         if (!comment) {
             throw new _HttpException.HttpException(false, 404, "Comment is not found");
         }
-        const replies = await _database.DB.CommentsReplies.findAll({
+        const replies = await DB.CommentsReplies.findAll({
             where: {
                 comment_id: comment.pk
             }
@@ -102,7 +104,7 @@ let ReplyService = class ReplyService {
             throw new _HttpException.HttpException(false, 404, "Reply is not found");
         }
         const likeCountPromises = replies.map((reply)=>{
-            return _database.DB.CommentsRepliesLikes.count({
+            return DB.CommentsRepliesLikes.count({
                 where: {
                     reply_id: reply.pk
                 }
@@ -118,7 +120,8 @@ let ReplyService = class ReplyService {
         };
     }
     async getReplyById(reply_id) {
-        const reply = await _database.DB.CommentsReplies.findOne({
+        const DB = await (0, _dblazy.getDB)();
+        const reply = await DB.CommentsReplies.findOne({
             where: {
                 uuid: reply_id
             }
@@ -126,7 +129,7 @@ let ReplyService = class ReplyService {
         if (!reply) {
             throw new _HttpException.HttpException(false, 400, "Reply is not found");
         }
-        const likeCount = await _database.DB.CommentsRepliesLikes.count({
+        const likeCount = await DB.CommentsRepliesLikes.count({
             where: {
                 reply_id: reply.pk
             }
@@ -136,7 +139,8 @@ let ReplyService = class ReplyService {
         return response;
     }
     async createReply(comment_id, author_id, data) {
-        const comment = await _database.DB.ArticlesComments.findOne({
+        const DB = await (0, _dblazy.getDB)();
+        const comment = await DB.ArticlesComments.findOne({
             where: {
                 uuid: comment_id
             },
@@ -144,7 +148,7 @@ let ReplyService = class ReplyService {
                 "pk"
             ]
         });
-        const reply = await _database.DB.CommentsReplies.create(_object_spread({
+        const reply = await DB.CommentsReplies.create(_object_spread({
             comment_id: comment.pk,
             author_id
         }, data));
@@ -152,13 +156,14 @@ let ReplyService = class ReplyService {
         return this.getReplyById(reply.uuid);
     }
     async updateReply(reply_id, data) {
+        const DB = await (0, _dblazy.getDB)();
         const updatedData = {};
         if (data.reply) updatedData.reply = data.reply;
         if (Object.keys(updatedData).length === 0) {
             throw new _HttpException.HttpException(false, 400, "Some field is required");
         }
         if (Object.keys(updatedData).length > 0) {
-            await _database.DB.CommentsReplies.update(updatedData, {
+            await DB.CommentsReplies.update(updatedData, {
                 where: {
                     uuid: reply_id
                 },
@@ -168,7 +173,8 @@ let ReplyService = class ReplyService {
         return this.getReplyById(reply_id);
     }
     async deleteReply(reply_id) {
-        const reply = await _database.DB.CommentsReplies.findOne({
+        const DB = await (0, _dblazy.getDB)();
+        const reply = await DB.CommentsReplies.findOne({
             where: {
                 uuid: reply_id
             }
@@ -176,13 +182,13 @@ let ReplyService = class ReplyService {
         if (!reply) {
             throw new _HttpException.HttpException(false, 400, "Reply is not found");
         }
-        const transaction = await _database.DB.sequelize.transaction();
+        const transaction = await DB.sequelize.transaction();
         try {
             await reply.destroy({
                 transaction
             });
             await Promise.all([
-                _database.DB.CommentsRepliesLikes.destroy({
+                DB.CommentsRepliesLikes.destroy({
                     where: {
                         reply_id: reply.pk
                     },
@@ -197,7 +203,8 @@ let ReplyService = class ReplyService {
         }
     }
     async likeReply(reply_id, user_id) {
-        const reply = await _database.DB.CommentsReplies.findOne({
+        const DB = await (0, _dblazy.getDB)();
+        const reply = await DB.CommentsReplies.findOne({
             where: {
                 uuid: reply_id
             }
@@ -205,17 +212,17 @@ let ReplyService = class ReplyService {
         if (!reply) {
             throw new _HttpException.HttpException(false, 400, "Reply is not found");
         }
-        const transaction = await _database.DB.sequelize.transaction();
+        const transaction = await DB.sequelize.transaction();
         try {
             const [replyLike, replyLikeCount] = await Promise.all([
-                _database.DB.CommentsRepliesLikes.findOne({
+                DB.CommentsRepliesLikes.findOne({
                     where: {
                         reply_id: reply.pk,
                         user_id
                     },
                     transaction
                 }),
-                _database.DB.CommentsRepliesLikes.count({
+                DB.CommentsRepliesLikes.count({
                     where: {
                         reply_id: reply.pk,
                         user_id
@@ -224,7 +231,7 @@ let ReplyService = class ReplyService {
                 })
             ]);
             if (!replyLike) {
-                await _database.DB.CommentsRepliesLikes.create({
+                await DB.CommentsRepliesLikes.create({
                     reply_id: reply.pk,
                     user_id
                 }, {
@@ -237,7 +244,7 @@ let ReplyService = class ReplyService {
                     likes: replyLikeCount + 1
                 };
             } else {
-                await _database.DB.CommentsRepliesLikes.destroy({
+                await DB.CommentsRepliesLikes.destroy({
                     where: {
                         reply_id: reply.pk,
                         user_id

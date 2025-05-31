@@ -8,7 +8,7 @@ Object.defineProperty(exports, "CommentService", {
         return CommentService;
     }
 });
-const _database = require("../database");
+const _dblazy = require("../database/db-lazy");
 const _HttpException = require("../exceptions/HttpException");
 const _typedi = require("typedi");
 const _sequelize = require("sequelize");
@@ -66,9 +66,10 @@ let CommentService = class CommentService {
         };
     }
     async getComments() {
-        const comments = await _database.DB.ArticlesComments.findAll({});
+        const DB = await (0, _dblazy.getDB)();
+        const comments = await DB.ArticlesComments.findAll({});
         const repliesCountPromises = comments.map((comment)=>{
-            return _database.DB.CommentsReplies.count({
+            return DB.CommentsReplies.count({
                 where: {
                     comment_id: comment.pk
                 }
@@ -79,7 +80,7 @@ let CommentService = class CommentService {
             comment.replies = repliesCount[index];
         });
         const likeCountPromises = comments.map((comment)=>{
-            return _database.DB.ArticleCommentsLikes.count({
+            return DB.ArticleCommentsLikes.count({
                 where: {
                     comment_id: comment.pk
                 }
@@ -95,7 +96,8 @@ let CommentService = class CommentService {
         };
     }
     async getCommentsByArticle(article_id) {
-        const article = await _database.DB.Articles.findOne({
+        const DB = await (0, _dblazy.getDB)();
+        const article = await DB.Articles.findOne({
             where: {
                 uuid: article_id
             },
@@ -106,7 +108,7 @@ let CommentService = class CommentService {
         if (!article) {
             throw new _HttpException.HttpException(false, 404, "Article is not found");
         }
-        const comments = await _database.DB.ArticlesComments.findAll({
+        const comments = await DB.ArticlesComments.findAll({
             where: {
                 article_id: article.pk
             }
@@ -115,7 +117,7 @@ let CommentService = class CommentService {
             throw new _HttpException.HttpException(false, 404, "Comment is not found");
         }
         const repliesCountPromises = comments.map((comment)=>{
-            return _database.DB.CommentsReplies.count({
+            return DB.CommentsReplies.count({
                 where: {
                     comment_id: comment.pk
                 }
@@ -126,7 +128,7 @@ let CommentService = class CommentService {
             comment.replies = repliesCount[index];
         });
         const likeCountPromises = comments.map((comment)=>{
-            return _database.DB.ArticleCommentsLikes.count({
+            return DB.ArticleCommentsLikes.count({
                 where: {
                     comment_id: comment.pk
                 }
@@ -142,18 +144,19 @@ let CommentService = class CommentService {
         };
     }
     async getCommentById(comment_id) {
-        const comment = await _database.DB.ArticlesComments.findOne({
+        const DB = await (0, _dblazy.getDB)();
+        const comment = await DB.ArticlesComments.findOne({
             where: {
                 uuid: comment_id
             }
         });
-        const likesCount = await _database.DB.ArticleCommentsLikes.count({
+        const likesCount = await DB.ArticleCommentsLikes.count({
             where: {
                 comment_id: comment.pk
             }
         });
         comment.likes = likesCount;
-        const repliesCount = await _database.DB.CommentsReplies.count({
+        const repliesCount = await DB.CommentsReplies.count({
             where: {
                 comment_id: comment.pk
             }
@@ -163,7 +166,8 @@ let CommentService = class CommentService {
         return response;
     }
     async createComment(article_id, author_id, data) {
-        const article = await _database.DB.Articles.findOne({
+        const DB = await (0, _dblazy.getDB)();
+        const article = await DB.Articles.findOne({
             where: {
                 uuid: article_id
             },
@@ -171,7 +175,7 @@ let CommentService = class CommentService {
                 "pk"
             ]
         });
-        const comment = await _database.DB.ArticlesComments.create(_object_spread({
+        const comment = await DB.ArticlesComments.create(_object_spread({
             article_id: article.pk,
             author_id
         }, data));
@@ -179,7 +183,8 @@ let CommentService = class CommentService {
         return this.getCommentById(comment.uuid);
     }
     async updateComment(comment_id, data) {
-        const comment = await _database.DB.ArticlesComments.findOne({
+        const DB = await (0, _dblazy.getDB)();
+        const comment = await DB.ArticlesComments.findOne({
             where: {
                 uuid: comment_id
             }
@@ -190,7 +195,7 @@ let CommentService = class CommentService {
             throw new _HttpException.HttpException(false, 400, "Some field is required");
         }
         if (Object.keys(updatedData).length > 0) {
-            await _database.DB.ArticlesComments.update(updatedData, {
+            await DB.ArticlesComments.update(updatedData, {
                 where: {
                     uuid: comment_id
                 },
@@ -200,7 +205,8 @@ let CommentService = class CommentService {
         return this.getCommentById(comment_id);
     }
     async deleteComment(comment_id) {
-        const comment = await _database.DB.ArticlesComments.findOne({
+        const DB = await (0, _dblazy.getDB)();
+        const comment = await DB.ArticlesComments.findOne({
             where: {
                 uuid: comment_id
             }
@@ -208,7 +214,7 @@ let CommentService = class CommentService {
         if (!comment) {
             throw new _HttpException.HttpException(false, 400, "Comment is not found");
         }
-        const replies = await _database.DB.CommentsReplies.findAll({
+        const replies = await DB.CommentsReplies.findAll({
             attributes: [
                 "pk"
             ],
@@ -217,25 +223,25 @@ let CommentService = class CommentService {
             }
         });
         const replyIds = replies.map((reply)=>reply.pk);
-        const transaction = await _database.DB.sequelize.transaction();
+        const transaction = await DB.sequelize.transaction();
         try {
             await comment.destroy({
                 transaction
             });
             await Promise.all([
-                _database.DB.ArticleCommentsLikes.destroy({
+                DB.ArticleCommentsLikes.destroy({
                     where: {
                         comment_id: comment.pk
                     },
                     transaction
                 }),
-                _database.DB.CommentsReplies.destroy({
+                DB.CommentsReplies.destroy({
                     where: {
                         comment_id: comment.pk
                     },
                     transaction
                 }),
-                _database.DB.CommentsRepliesLikes.destroy({
+                DB.CommentsRepliesLikes.destroy({
                     where: {
                         reply_id: {
                             [_sequelize.Op.in]: replyIds
@@ -252,7 +258,8 @@ let CommentService = class CommentService {
         }
     }
     async likeComment(comment_id, user_id) {
-        const comment = await _database.DB.ArticlesComments.findOne({
+        const DB = await (0, _dblazy.getDB)();
+        const comment = await DB.ArticlesComments.findOne({
             where: {
                 uuid: comment_id
             }
@@ -260,17 +267,17 @@ let CommentService = class CommentService {
         if (!comment) {
             throw new _HttpException.HttpException(false, 400, "Comment is not found");
         }
-        const transaction = await _database.DB.sequelize.transaction();
+        const transaction = await DB.sequelize.transaction();
         try {
             const [commentLike, commentLikesCount] = await Promise.all([
-                _database.DB.ArticleCommentsLikes.findOne({
+                DB.ArticleCommentsLikes.findOne({
                     where: {
                         comment_id: comment.pk,
                         user_id
                     },
                     transaction
                 }),
-                _database.DB.ArticleCommentsLikes.count({
+                DB.ArticleCommentsLikes.count({
                     where: {
                         comment_id: comment.pk,
                         user_id
@@ -279,7 +286,7 @@ let CommentService = class CommentService {
                 })
             ]);
             if (!commentLike) {
-                await _database.DB.ArticleCommentsLikes.create({
+                await DB.ArticleCommentsLikes.create({
                     comment_id: comment.pk,
                     user_id
                 }, {
@@ -292,7 +299,7 @@ let CommentService = class CommentService {
                     likes: commentLikesCount + 1
                 };
             } else {
-                await _database.DB.ArticleCommentsLikes.destroy({
+                await DB.ArticleCommentsLikes.destroy({
                     where: {
                         comment_id: comment.pk,
                         user_id

@@ -1,5 +1,5 @@
 import { Service } from "typedi";
-import { DB } from "@database";
+import { getDB } from "@/database/db-lazy";
 
 import { File } from "@interfaces/file.interface";
 import { HttpException } from "@/exceptions/HttpException";
@@ -7,6 +7,7 @@ import { HttpException } from "@/exceptions/HttpException";
 @Service()
 export class FileService {
   public async uploadSingleFile(user_id: number, file: Express.Multer.File): Promise<File> {
+    const DB = await getDB();
     // Save S3 URL if available
     const fileUpload = await DB.Files.create({
       user_id,
@@ -24,6 +25,7 @@ export class FileService {
   };
   
   public async getFileWithUUID(file_uuid: string): Promise<File> {
+    const DB = await getDB();
     const file = await DB.Files.findOne({
       attributes: ["name", "url"],
       where: {
@@ -36,6 +38,7 @@ export class FileService {
   };
 
   public async getUserFiles(user_id: number): Promise<File[]> {
+    const DB = await getDB();
     const files = await DB.Files.findAll({
       attributes: { exclude: ["pk", "user_id", "name"] },
       where: {

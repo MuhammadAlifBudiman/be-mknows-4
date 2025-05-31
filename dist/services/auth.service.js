@@ -12,7 +12,7 @@ const _bcrypt = require("bcrypt");
 const _jsonwebtoken = require("jsonwebtoken");
 const _typedi = require("typedi");
 const _index = require("../config/index");
-const _database = require("../database");
+const _dblazy = require("../database/db-lazy");
 const _otpsservice = require("./otps.service");
 const _HttpException = require("../exceptions/HttpException");
 const _mailer = require("../utils/mailer");
@@ -92,9 +92,9 @@ const createCookie = (TokenPayload)=>{
 };
 let AuthService = class AuthService {
     async signup(userData) {
-        const transaction = await _database.DB.sequelize.transaction();
+        const transaction = await (await (0, _dblazy.getDB)()).sequelize.transaction();
         try {
-            const existingUser = await _database.DB.Users.findOne({
+            const existingUser = await (await (0, _dblazy.getDB)()).Users.findOne({
                 where: {
                     email: userData.email
                 },
@@ -104,7 +104,7 @@ let AuthService = class AuthService {
                 throw new _HttpException.HttpException(false, 409, `This email ${userData.email} already exists`);
             }
             const hashedPassword = await (0, _bcrypt.hash)(userData.password, 10);
-            const createUser = await _database.DB.Users.create(_object_spread_props(_object_spread({}, userData), {
+            const createUser = await (await (0, _dblazy.getDB)()).Users.create(_object_spread_props(_object_spread({}, userData), {
                 password: hashedPassword
             }), {
                 transaction
@@ -133,7 +133,7 @@ let AuthService = class AuthService {
         }
     }
     async login(userData, userAgent) {
-        const findUser = await _database.DB.Users.findOne({
+        const findUser = await (await (0, _dblazy.getDB)()).Users.findOne({
             attributes: [
                 "pk",
                 "uuid",
@@ -162,7 +162,7 @@ let AuthService = class AuthService {
         };
     }
     async logout(userData, userSessionId) {
-        const findUser = await _database.DB.Users.findOne({
+        const findUser = await (await (0, _dblazy.getDB)()).Users.findOne({
             where: {
                 pk: userData.pk
             }
@@ -175,14 +175,14 @@ let AuthService = class AuthService {
         return logout;
     }
     async checkSessionActive(session_id) {
-        const userSession = await _database.DB.UsersSessions.findOne({
+        const userSession = await (await (0, _dblazy.getDB)()).UsersSessions.findOne({
             where: {
                 uuid: session_id,
                 status: "ACTIVE"
             },
             include: [
                 {
-                    model: _database.DB.Users,
+                    model: (await (0, _dblazy.getDB)()).Users,
                     as: "user"
                 }
             ]
@@ -190,13 +190,13 @@ let AuthService = class AuthService {
         return userSession || null;
     }
     async getUserRoles(user_id) {
-        const roles = await _database.DB.UsersRoles.findAll({
+        const roles = await (await (0, _dblazy.getDB)()).UsersRoles.findAll({
             where: {
                 user_id
             },
             include: [
                 {
-                    model: _database.DB.Roles,
+                    model: (await (0, _dblazy.getDB)()).Roles,
                     as: "role"
                 }
             ]
@@ -204,13 +204,13 @@ let AuthService = class AuthService {
         return roles;
     }
     async logoutSessionActive(data) {
-        const userSession = await _database.DB.UsersSessions.findOne({
+        const userSession = await (await (0, _dblazy.getDB)()).UsersSessions.findOne({
             where: {
                 uuid: data.sid,
                 status: "ACTIVE"
             },
             include: {
-                model: _database.DB.Users,
+                model: (await (0, _dblazy.getDB)()).Users,
                 as: "user"
             }
         });
@@ -223,7 +223,7 @@ let AuthService = class AuthService {
         }
     }
     async createUserSession(data) {
-        const session = await _database.DB.UsersSessions.create({
+        const session = await (await (0, _dblazy.getDB)()).UsersSessions.create({
             user_id: data.pk,
             useragent: data.useragent,
             ip_address: data.ip_address,
@@ -232,7 +232,7 @@ let AuthService = class AuthService {
         return session;
     }
     async getRoleId(name) {
-        const role = await _database.DB.Roles.findOne({
+        const role = await (await (0, _dblazy.getDB)()).Roles.findOne({
             where: {
                 name
             }
@@ -240,7 +240,7 @@ let AuthService = class AuthService {
         return role.pk;
     }
     async asignUserRole(user_id, role_id, transaction) {
-        const role = await _database.DB.UsersRoles.create({
+        const role = await (await (0, _dblazy.getDB)()).UsersRoles.create({
             user_id,
             role_id
         }, {
@@ -249,7 +249,7 @@ let AuthService = class AuthService {
         return role;
     }
     async verifyEmail(user_uuid, otp) {
-        const user = await _database.DB.Users.findOne({
+        const user = await (await (0, _dblazy.getDB)()).Users.findOne({
             attributes: [
                 "pk"
             ],
