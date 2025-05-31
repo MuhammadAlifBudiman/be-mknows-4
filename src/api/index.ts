@@ -1,4 +1,5 @@
 import { app } from '../server';
 import "pg";
 
-export default app;
+// export default app;
+app.listen();
