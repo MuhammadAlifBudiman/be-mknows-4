@@ -1,16 +1,8 @@
 "use strict";
-const express = require('express');
-const pg = require('pg');
-const app = express();
-const PORT = 8000;
-app.get('/', (req, res)=>{
-    res.send('Hello World');
+Object.defineProperty(exports, "__esModule", {
+    value: true
 });
-app.get('/about', (req, res)=>{
-    res.send('About route 🎉 ');
-});
-app.listen(PORT, ()=>{
-    console.log(`✅ Server is running on port ${PORT}`);
-});
+const _server = require("../server");
+_server.app.listen();
 
 //# sourceMappingURL=index.js.map
