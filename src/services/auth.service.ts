@@ -31,7 +31,7 @@ const createCookie = (TokenPayload: TokenPayload): string => {
 
 @Service()
 export class AuthService {
-  public async signup(userData: CreateUserDto): Promise<{ uuid: string, email: string }> {
+  public async signup(userData: CreateUserDto): Promise<{ uuid: string, email: string, otp?: string }> {
     const transaction = await (await getDB()).sequelize.transaction();
 
     try {
@@ -66,6 +66,10 @@ export class AuthService {
 
       await transaction.commit();
       
+      // Only include OTP key in response in development or test
+      if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
+        return { uuid: createUser.uuid, email: createUser.email, otp: otp.key };
+      }
       return { uuid: createUser.uuid, email: createUser.email };
     } catch (error) {
       await transaction.rollback();

@@ -20,7 +20,6 @@ const _multer = /*#__PURE__*/ _interop_require_default(require("multer"));
 const _awssdk = /*#__PURE__*/ _interop_require_default(require("aws-sdk"));
 const _HttpException = require("../exceptions/HttpException");
 const _index = require("../config/index");
-const _logger = require("../utils/logger");
 function _interop_require_default(obj) {
     return obj && obj.__esModule ? obj : {
         default: obj
@@ -59,9 +58,6 @@ const uploadToS3 = async (req, res, next)=>{
         req.file.location = data.Location;
         next();
     } catch (err) {
-        _logger.logger.error(`[S3 UPLOAD ERROR] ${err && err.message}`);
-        _logger.logger.error(`[S3 PARAMS] Bucket: ${S3_BUCKET}, Key: ${params.Key}, ContentType: ${params.ContentType}`);
-        _logger.logger.error(`[S3 ENV] AWS_ACCESS_KEY_ID: ${process.env.AWS_ACCESS_KEY_ID}, AWS_REGION: ${process.env.AWS_REGION}`);
         next(new _HttpException.HttpException(false, 500, "S3 Upload Failed"));
     }
 };
