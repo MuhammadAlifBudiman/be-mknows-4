@@ -12,6 +12,7 @@ const _categoriesroutes = require("./routes/categories.routes");
 const _articlesroutes = require("./routes/articles.routes");
 const _commentsroutes = require("./routes/comments.routes");
 const _repliesroutes = require("./routes/replies.routes");
+require("pg");
 (0, _validateEnv.ValidateEnv)();
 const app = new _app.App([
     new _authroutes.AuthRoute(),

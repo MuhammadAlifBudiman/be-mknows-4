@@ -10,6 +10,7 @@ import { CategoryRoute } from "@routes/categories.routes";
 import { ArticleRoute } from "@routes/articles.routes";
 import { CommentRoute } from "./routes/comments.routes";
 import { ReplyRoute } from "./routes/replies.routes";
+import "pg";
 
 ValidateEnv();
 
