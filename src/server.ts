@@ -25,4 +25,4 @@ export const app = new App([
   new ReplyRoute()
 ]);
 
-// app.listen();
+app.listen();

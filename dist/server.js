@@ -29,5 +29,6 @@ const app = new _app.App([
     new _commentsroutes.CommentRoute(),
     new _repliesroutes.ReplyRoute()
 ]);
+app.listen();
 
 //# sourceMappingURL=server.js.map
