@@ -4,21 +4,8 @@ import { OTP } from "@interfaces/otp.interface";
 
 export type OTPCreationAttributes = Optional<OTP, "pk" | "uuid">;
 
-export class OTPModel extends Model<OTP, OTPCreationAttributes> implements OTP {
-  public pk: number;
-  public uuid: string;
-  
-  public user_id: number;
-
-  public key: string; // otp nya
-  public type: string; // FORGET_PASSWORD, EMAIL_VERIFICATION
-  public status: string; // AVAILABLE, USED, EXPIRED
-
-  public expired_at: Date;
-
-  public readonly created_at!: Date;
-  public readonly updated_at!: Date;
-  public readonly deleted_at: Date;
+export class OTPModel extends Model<OTP, OTPCreationAttributes> {
+  // remove public class field declarations to avoid shadowing Sequelize's attribute getters and setters
 }
 
 export default function (sequelize: Sequelize): typeof OTPModel {
