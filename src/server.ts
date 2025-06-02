@@ -10,11 +10,10 @@ import { CategoryRoute } from "@routes/categories.routes";
 import { ArticleRoute } from "@routes/articles.routes";
 import { CommentRoute } from "./routes/comments.routes";
 import { ReplyRoute } from "./routes/replies.routes";
-import "pg";
 
 ValidateEnv();
 
-const app = new App([
+export const app = new App([
   new AuthRoute(), 
   new UserRoute(),
   new AccountRoute(),
@@ -26,4 +25,4 @@ const app = new App([
   new ReplyRoute()
 ]);
 
-app.listen();
+// app.listen();

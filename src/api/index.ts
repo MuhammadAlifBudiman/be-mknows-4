@@ -1,5 +1,5 @@
-// import { app } from '../server';
-// import "pg";
+import { app } from '../server';
+import "pg";
 
-// // export default app;
-// app.listen();
+// export default app;
+app.listen();

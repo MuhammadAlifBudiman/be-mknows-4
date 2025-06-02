@@ -2,6 +2,12 @@
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
+Object.defineProperty(exports, "app", {
+    enumerable: true,
+    get: function() {
+        return app;
+    }
+});
 const _app = require("./app");
 const _validateEnv = require("./utils/validateEnv");
 const _authroutes = require("./routes/auth.routes");
@@ -12,7 +18,6 @@ const _categoriesroutes = require("./routes/categories.routes");
 const _articlesroutes = require("./routes/articles.routes");
 const _commentsroutes = require("./routes/comments.routes");
 const _repliesroutes = require("./routes/replies.routes");
-require("pg");
 (0, _validateEnv.ValidateEnv)();
 const app = new _app.App([
     new _authroutes.AuthRoute(),
@@ -24,6 +29,5 @@ const app = new _app.App([
     new _commentsroutes.CommentRoute(),
     new _repliesroutes.ReplyRoute()
 ]);
-app.listen();
 
 //# sourceMappingURL=server.js.map
