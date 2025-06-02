@@ -4,6 +4,7 @@ import AWS from "aws-sdk";
 
 import { HttpException } from "@exceptions/HttpException";
 import { MAX_SIZE_FILE_UPLOAD } from "@config/index";
+import { logger } from "@utils/logger";
 
 // AWS S3 config
 const s3 = new AWS.S3({
@@ -42,6 +43,9 @@ export const uploadToS3 = async (req: Request, res, next) => {
     (req.file as any).location = data.Location; // S3 file URL
     next();
   } catch (err) {
+    logger.error(`[S3 UPLOAD ERROR] ${err && err.message}`);
+    logger.error(`[S3 PARAMS] Bucket: ${S3_BUCKET}, Key: ${params.Key}, ContentType: ${params.ContentType}`);
+    logger.error(`[S3 ENV] AWS_ACCESS_KEY_ID: ${process.env.AWS_ACCESS_KEY_ID}, AWS_REGION: ${process.env.AWS_REGION}`);
     next(new HttpException(false, 500, "S3 Upload Failed"));
   }
 };
