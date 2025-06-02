@@ -17,7 +17,7 @@ function _interop_require_default(obj) {
     };
 }
 const sendEmailOTP = async (data)=>{
-    const template = await _ejs.default.renderFile(_path.default.join(__dirname, "../../public/templates/email-verification.ejs"), {
+    const template = await _ejs.default.renderFile(_path.default.join(__dirname, "../public/templates/email-verification.ejs"), {
         data
     });
     await (0, _nodemailer.sendEmail)(data.email, "Email Verification", template);
