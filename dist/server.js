@@ -2,12 +2,6 @@
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-Object.defineProperty(exports, "app", {
-    enumerable: true,
-    get: function() {
-        return app;
-    }
-});
 const _app = require("./app");
 const _validateEnv = require("./utils/validateEnv");
 const _authroutes = require("./routes/auth.routes");
@@ -29,5 +23,6 @@ const app = new _app.App([
     new _commentsroutes.CommentRoute(),
     new _repliesroutes.ReplyRoute()
 ]);
+app.listen();
 
 //# sourceMappingURL=server.js.map

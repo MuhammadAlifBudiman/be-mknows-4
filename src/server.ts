@@ -13,7 +13,7 @@ import { ReplyRoute } from "./routes/replies.routes";
 
 ValidateEnv();
 
-export const app = new App([
+const app = new App([
   new AuthRoute(), 
   new UserRoute(),
   new AccountRoute(),
@@ -25,4 +25,4 @@ export const app = new App([
   new ReplyRoute()
 ]);
 
-// app.listen();
+app.listen();
