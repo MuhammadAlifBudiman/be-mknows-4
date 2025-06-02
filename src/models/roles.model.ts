@@ -4,7 +4,7 @@ import { Role } from "@interfaces/authentication/user-role.interface";
 export type RoleCreationAttributes = Optional<Role, "pk" | "uuid">;
 
 export class RoleModel extends Model<Role, RoleCreationAttributes> {
-  // Removed public class fields to avoid shadowing Sequelize attributes
+  // No public fields here! Let Sequelize handle attributes.
 }
 
 export default function (sequelize: Sequelize): typeof RoleModel {

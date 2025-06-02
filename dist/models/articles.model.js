@@ -36,7 +36,7 @@ function _define_property(obj, key, value) {
 }
 let ArticleModel = class ArticleModel extends _sequelize.Model {
     constructor(...args){
-        super(...args), _define_property(this, "pk", void 0), _define_property(this, "uuid", void 0), _define_property(this, "title", void 0), _define_property(this, "description", void 0), _define_property(this, "content", void 0), _define_property(this, "thumbnail_id", void 0), _define_property(this, "author_id", void 0), _define_property(this, "thumbnail", void 0), _define_property(this, "author", void 0), _define_property(this, "categories", void 0), _define_property(this, "views", void 0), _define_property(this, "likes", void 0), _define_property(this, "comments", void 0), _define_property(this, "bookmarks", void 0), _define_property(this, "created_at", void 0), _define_property(this, "updated_at", void 0), _define_property(this, "deleted_at", void 0);
+        super(...args), _define_property(this, "created_at", void 0), _define_property(this, "updated_at", void 0), _define_property(this, "deleted_at", void 0);
     }
 };
 function _default(sequelize) {

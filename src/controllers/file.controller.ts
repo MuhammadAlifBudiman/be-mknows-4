@@ -19,6 +19,7 @@ export class FileController {
 
     if(!image) throw new HttpException(false, 400, "File is required");
 
+    console.log(image);
     const response = await this.file.uploadSingleFile(user_id, image);
     res.status(201).json(apiResponse(201, "OK", "Upload Success", response));
   });

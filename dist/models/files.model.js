@@ -17,23 +17,7 @@ _export(exports, {
     }
 });
 const _sequelize = require("sequelize");
-function _define_property(obj, key, value) {
-    if (key in obj) {
-        Object.defineProperty(obj, key, {
-            value: value,
-            enumerable: true,
-            configurable: true,
-            writable: true
-        });
-    } else {
-        obj[key] = value;
-    }
-    return obj;
-}
 let FileModel = class FileModel extends _sequelize.Model {
-    constructor(...args){
-        super(...args), _define_property(this, "pk", void 0), _define_property(this, "uuid", void 0), _define_property(this, "name", void 0), _define_property(this, "user_id", void 0), _define_property(this, "type", void 0), _define_property(this, "size", void 0), _define_property(this, "created_at", void 0), _define_property(this, "updated_at", void 0), _define_property(this, "deleted_at", void 0);
-    }
 };
 function _default(sequelize) {
     FileModel.init({
@@ -61,6 +45,10 @@ function _default(sequelize) {
         type: {
             type: _sequelize.DataTypes.STRING,
             allowNull: false
+        },
+        url: {
+            type: _sequelize.DataTypes.STRING,
+            allowNull: true
         }
     }, {
         tableName: "files",

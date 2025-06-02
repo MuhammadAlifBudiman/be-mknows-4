@@ -11,7 +11,7 @@ export class FileService {
     // Save S3 URL if available
     const fileUpload = await DB.Files.create({
       user_id,
-      name: file.filename,
+      name: file.originalname,
       type: file.mimetype,
       size: file.size,
       url: (file as any).location || null, // S3 URL from uploadToS3

@@ -4,7 +4,7 @@ import { Routes } from "@interfaces/routes.interface";
 import { FileController } from "@controllers/file.controller";
 
 import { AuthMiddleware } from "@middlewares/auth.middleware";
-import { uploadFile } from "@middlewares/file-uploader.middleware";
+import { uploadFile, uploadToS3 } from "@middlewares/file-uploader.middleware";
 
 export class FileRoute implements Routes {
   public path = "files";
@@ -20,6 +20,7 @@ export class FileRoute implements Routes {
       `/v1/${this.path}/upload`, 
       AuthMiddleware,
       uploadFile.single("file"), 
+      uploadToS3,
       this.file.uploadFile
     );
     this.router.get(

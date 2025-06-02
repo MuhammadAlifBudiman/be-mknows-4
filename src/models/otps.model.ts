@@ -5,7 +5,7 @@ import { OTP } from "@interfaces/otp.interface";
 export type OTPCreationAttributes = Optional<OTP, "pk" | "uuid">;
 
 export class OTPModel extends Model<OTP, OTPCreationAttributes> {
-  // remove public class field declarations to avoid shadowing Sequelize's attribute getters and setters
+  // No public fields here! Let Sequelize handle attributes.
 }
 
 export default function (sequelize: Sequelize): typeof OTPModel {

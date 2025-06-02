@@ -22,7 +22,7 @@ let FileService = class FileService {
         const DB = await (0, _dblazy.getDB)();
         const fileUpload = await DB.Files.create({
             user_id,
-            name: file.filename,
+            name: file.originalname,
             type: file.mimetype,
             size: file.size,
             url: file.location || null

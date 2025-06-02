@@ -4,18 +4,8 @@ import { File } from "@interfaces/file.interface";
 
 export type FileCreationAttributes = Optional<File, "pk" | "uuid">;
 
-export class FileModel extends Model<File, FileCreationAttributes> implements File {
-  public pk: number;
-  public uuid: string;
-  
-  public name: string;
-  public user_id: number;
-  public type: string;
-  public size: number;
-
-  public readonly created_at!: Date;
-  public readonly updated_at!: Date;
-  public readonly deleted_at: Date;
+export class FileModel extends Model<File, FileCreationAttributes> {
+  // No public fields here! Let Sequelize handle attributes.
 }
 
 export default function (sequelize: Sequelize): typeof FileModel {
@@ -51,6 +41,10 @@ export default function (sequelize: Sequelize): typeof FileModel {
       type: {
         type: DataTypes.STRING,
         allowNull: false,
+      },
+      url: {
+        type: DataTypes.STRING,
+        allowNull: true,
       },
     },
     {

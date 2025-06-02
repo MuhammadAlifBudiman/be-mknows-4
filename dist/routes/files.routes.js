@@ -27,7 +27,7 @@ function _define_property(obj, key, value) {
 }
 let FileRoute = class FileRoute {
     initializeRoutes() {
-        this.router.post(`/v1/${this.path}/upload`, _authmiddleware.AuthMiddleware, _fileuploadermiddleware.uploadFile.single("file"), this.file.uploadFile);
+        this.router.post(`/v1/${this.path}/upload`, _authmiddleware.AuthMiddleware, _fileuploadermiddleware.uploadFile.single("file"), _fileuploadermiddleware.uploadToS3, this.file.uploadFile);
         this.router.get(`/v1/${this.path}/:file_id/preview`, _authmiddleware.AuthMiddleware, this.file.getFileWithUUID);
         this.router.get(`/v1/${this.path}/mine`, _authmiddleware.AuthMiddleware, this.file.getFileMine);
     }
