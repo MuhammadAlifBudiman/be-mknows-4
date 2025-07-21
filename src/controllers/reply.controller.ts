@@ -25,7 +25,7 @@ export class ReplyController{
         const author_id = req.user.pk;
         const data = req.body;
         const response = await this.reply.createReply(comment_id, author_id, data);
-        res.status(200).json(apiResponse(200, "OK", "Create Reply Success", response));
+        res.status(201).json(apiResponse(200, "OK", "Create Reply Success", response));
     })
 
     public updateReply = asyncHandler(async (req: RequestWithUser, res: Response, next: NextFunction) => {
@@ -39,7 +39,7 @@ export class ReplyController{
     public deleteReply = asyncHandler(async (req: RequestWithUser, res: Response, next: NextFunction) => {
         const { reply_id } = req.params;
         const response: boolean = await this.reply.deleteReply(reply_id);
-        res.status(200).json(apiResponse(200, "OK", "Delete Reply Success", response));
+        res.status(200).json(apiResponse(200, "OK", "Delete Reply Success", {}));
     })
 
     public likeReply = asyncHandler(async (req: RequestWithUser, res: Response, next: NextFunction) => {

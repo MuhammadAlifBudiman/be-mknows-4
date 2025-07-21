@@ -34,6 +34,6 @@ export class AccountController {
 
     const user: User = await this.account.updateUserProfile(user_id, updatedProfile);
 
-    res.status(200).json(apiResponse(200, "OK", "Get Profile Success", user));
+    res.status(200).json(apiResponse(200, "OK", "Update Profile Success", user));
   });
 }

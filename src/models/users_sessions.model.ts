@@ -6,6 +6,7 @@ import { UserModel } from "@models/users.model";
 export type UserSessionCreationAttributes = Optional<UserSession, "pk" | "uuid">;
 
 export class UserSessionModel extends Model<UserSession, UserSessionCreationAttributes> {
+  uuid: string;
   // No public fields here! Let Sequelize handle attributes.
 }
 

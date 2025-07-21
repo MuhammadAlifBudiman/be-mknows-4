@@ -3,19 +3,27 @@ import { getDB } from "@/database/db-lazy";
 
 import { File } from "@interfaces/file.interface";
 import { HttpException } from "@/exceptions/HttpException";
+import { NODE_ENV } from "@config/index";
 
 @Service()
 export class FileService {
   public async uploadSingleFile(user_id: number, file: Express.Multer.File): Promise<File> {
     const DB = await getDB();
-    // Save S3 URL if available
-    const fileUpload = await DB.Files.create({
+    const isProduction = NODE_ENV === 'production';
+    const fileUrl = isProduction
+      ? (file as any).location || null
+      : `/uploads/${file.filename}`;
+    const fileName = isProduction ? file.originalname : file.filename;
+
+    const fileData = {
       user_id,
-      name: file.originalname,
+      name: fileName,
       type: file.mimetype,
       size: file.size,
-      url: (file as any).location || null, // S3 URL from uploadToS3
-    });
+      url: fileUrl,
+    };
+
+    const fileUpload = await DB.Files.create(fileData);
 
     delete fileUpload.dataValues.pk;
     delete fileUpload.dataValues.name;

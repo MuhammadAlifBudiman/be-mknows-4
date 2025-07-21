@@ -24,6 +24,7 @@ export class App {
 
   private readonly env: string;
   private readonly port: string | number;
+  private _dbSynced: boolean = false; // Track if the DB has been synced
 
   constructor(routes: Routes[]) {
     this.app = express();
@@ -33,7 +34,19 @@ export class App {
     // Add DB initialization middleware
     this.app.use(async (req, res, next) => {
       try {
-        await getDB();
+        const db = await getDB();
+        // In development or test, drop and recreate all tables on first request
+        if (this.env === 'development' || this.env === 'test') {
+          if (!this._dbSynced) {
+            await db.sequelize.sync({ alter: true, force: true });
+            logger.info('Database synced with force: true (all tables dropped and recreated)');
+            // Run the role seeder after syncing
+            const roleSeeder = require('./database/seeders/01-insert-role.js');
+            await roleSeeder.up(db.sequelize.getQueryInterface(), db.sequelize.constructor);
+            logger.info('Role seeder executed');
+            this._dbSynced = true;
+          }
+        }
         next();
       } catch (err) {
         logger.error("DB initialization failed: " + err.message);

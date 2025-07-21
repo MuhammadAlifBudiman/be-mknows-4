@@ -68,6 +68,15 @@ let AuthController = class AuthController {
                 email: response.email
             }));
         }));
+        _define_property(this, "assignRoleToUser", (0, _expressasynchandler.default)(async (req, res, next)=>{
+            const user_uuid = req.params.uuid;
+            const { role } = req.body;
+            if (!role) {
+                throw new _HttpException.HttpException(false, 400, "Role is required");
+            }
+            const result = await this.auth.assignRoleToUser(user_uuid, role);
+            res.status(200).json((0, _apiResponse.apiResponse)(200, "OK", `Role '${role}' has been assigned to user`, result));
+        }));
     }
 };
 

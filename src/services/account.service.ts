@@ -13,16 +13,25 @@ import { HttpException } from "@/exceptions/HttpException";
 export class AccountService {
   public async getProfileByUserId(user_id: number): Promise<User> {
     const DB = await getDB();
+
     const user: UserModel = await DB.Users.findOne({ 
       attributes: { exclude: ["pk"] },
       where: { pk: user_id }
     });
 
-    const file = await DB.Files.findOne({ where: { pk: user.display_picture }});
+    if (!user) {
+      throw new HttpException(false, 404, "User not found");
+    }
+
+    let displayPictureUuid: string | null = null;
+    if (user.display_picture) {
+      const file = await DB.Files.findOne({ where: { pk: user.display_picture }});
+      displayPictureUuid = file?.uuid || null;
+    }
 
     const response = {
       ...user.get(),
-      display_picture: file?.uuid,
+      display_picture: displayPictureUuid,
     };
 
     return response;
@@ -72,12 +81,16 @@ export class AccountService {
     delete user.dataValues.pk;
     delete user.dataValues.password;
 
-    const file = await DB.Files.findOne({ where: { pk: user.display_picture }});
+    let displayPictureUuid: string | null = null;
+    if (user.display_picture) {
+      const file = await DB.Files.findOne({ where: { pk: user.display_picture }});
+      displayPictureUuid = file?.uuid || null;
+    }
     
     const response = {
       ...user.get(),
-      display_picture: file?.uuid,
-    }
+      display_picture: displayPictureUuid,
+    };
 
     return response;
   }

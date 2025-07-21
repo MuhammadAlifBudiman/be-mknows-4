@@ -10,6 +10,8 @@ import { RequestWithUser } from "@interfaces/authentication/token.interface";
 import { apiResponse } from "@utils/apiResponse";
 import { HttpException } from "@/exceptions/HttpException";
 
+import { NODE_ENV } from "@config/index";
+
 export class FileController {
   private file = Container.get(FileService);
 
@@ -19,7 +21,6 @@ export class FileController {
 
     if(!image) throw new HttpException(false, 400, "File is required");
 
-    console.log(image);
     const response = await this.file.uploadSingleFile(user_id, image);
     res.status(201).json(apiResponse(201, "OK", "Upload Success", response));
   });
@@ -30,9 +31,13 @@ export class FileController {
     if (!file || !file.url) {
       throw new HttpException(false, 400, "File is not found");
     }
-    // Redirect to S3 URL or return the URL
-    res.redirect(file.url);
-    // Or: res.json({ url: file.url });
+    if (NODE_ENV === 'production') {
+      res.redirect(file.url);
+    } else {
+      // Local: send file from uploads directory
+      const filepath = path.join(process.cwd(), `./uploads/${file.name}`);
+      res.sendFile(filepath);
+    }
   });
 
   public getFileMine = asyncHandler(async (req: RequestWithUser, res: Response, next: NextFunction) => {

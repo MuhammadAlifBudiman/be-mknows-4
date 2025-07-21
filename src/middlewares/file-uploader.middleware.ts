@@ -3,7 +3,7 @@ import multer from "multer";
 import AWS from "aws-sdk";
 
 import { HttpException } from "@exceptions/HttpException";
-import { MAX_SIZE_FILE_UPLOAD } from "@config/index";
+import { MAX_SIZE_FILE_UPLOAD, NODE_ENV } from "@config/index";
 
 // AWS S3 config
 const s3 = new AWS.S3({
@@ -18,7 +18,17 @@ export const uploadFile = multer({
     files: 10,
     fileSize: Number(MAX_SIZE_FILE_UPLOAD),
   },
-  storage: multer.memoryStorage(), // store in memory, not disk
+  storage:
+    NODE_ENV === 'production'
+      ? multer.memoryStorage()
+      : multer.diskStorage({
+          destination: (req, file, cb) => {
+            cb(null, 'uploads/');
+          },
+          filename: (req, file, cb) => {
+            cb(null, Date.now() + '-' + file.originalname);
+          },
+        }),
   fileFilter(req: Request, file: Express.Multer.File, callback: multer.FileFilterCallback) {
     if (!file.mimetype.match(/^image|application\/(jpg|jpeg|png)$/)) {
       return callback(new HttpException(false, 400, "Invalid File Format"));

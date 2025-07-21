@@ -82,6 +82,16 @@ let UserService = class UserService {
         if (!findUser) throw new _HttpException.HttpException(false, 409, "User doesn't exist");
         return findUser;
     }
+    async findUserByUUID(user_uuid) {
+        const db = await (0, _dblazy.getDB)();
+        const findUser = await db.Users.findOne({
+            where: {
+                uuid: user_uuid
+            }
+        });
+        if (!findUser) throw new _HttpException.HttpException(false, 409, "User doesn't exist");
+        return findUser;
+    }
     async createUser(userData) {
         const db = await (0, _dblazy.getDB)();
         const findUser = await db.Users.findOne({
@@ -96,28 +106,40 @@ let UserService = class UserService {
         }));
         return createUserData;
     }
-    async updateUser(userId, userData) {
+    async updateUser(user_uuid, userData) {
         const db = await (0, _dblazy.getDB)();
-        const findUser = await db.Users.findByPk(userId);
+        const findUser = await db.Users.findOne({
+            where: {
+                uuid: user_uuid
+            }
+        });
         if (!findUser) throw new _HttpException.HttpException(false, 409, "User doesn't exist");
         const hashedPassword = await (0, _bcrypt.hash)(userData.password, 10);
         await db.Users.update(_object_spread_props(_object_spread({}, userData), {
             password: hashedPassword
         }), {
             where: {
-                pk: userId
+                uuid: user_uuid
             }
         });
-        const updateUser = await db.Users.findByPk(userId);
+        const updateUser = await db.Users.findOne({
+            where: {
+                uuid: user_uuid
+            }
+        });
         return updateUser;
     }
-    async deleteUser(userId) {
+    async deleteUser(user_uuid) {
         const db = await (0, _dblazy.getDB)();
-        const findUser = await db.Users.findByPk(userId);
+        const findUser = await db.Users.findOne({
+            where: {
+                uuid: user_uuid
+            }
+        });
         if (!findUser) throw new _HttpException.HttpException(false, 409, "User doesn't exist");
         await db.Users.destroy({
             where: {
-                pk: userId
+                uuid: user_uuid
             }
         });
         return findUser;

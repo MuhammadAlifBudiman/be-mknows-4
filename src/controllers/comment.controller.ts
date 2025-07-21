@@ -26,7 +26,7 @@ export class CommentController{
         const author_id = req.user.pk;
         const data = req.body;
         const response = await this.comment.createComment(article_id, author_id, data);
-        res.status(200).json(apiResponse(200, "OK", "Create Comment Success", response));
+        res.status(201).json(apiResponse(200, "OK", "Create Comment Success", response));
     });
 
     public updateComment = asyncHandler(async (req: RequestWithUser, res: Response, next: NextFunction) => {
@@ -40,7 +40,7 @@ export class CommentController{
     public deleteComment = asyncHandler(async (req: RequestWithUser, res: Response, next: NextFunction) => {
         const { comment_id } = req.params;
         const response: boolean = await this.comment.deleteComment(comment_id);
-        res.status(200).json(apiResponse(200, "OK", "Delete Comment Success", response));
+        res.status(200).json(apiResponse(200, "OK", "Delete Comment Success", {}));
     });
 
     public likeComment = asyncHandler(async (req: RequestWithUser, res: Response, next: NextFunction) => {

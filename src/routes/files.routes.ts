@@ -6,6 +6,8 @@ import { FileController } from "@controllers/file.controller";
 import { AuthMiddleware } from "@middlewares/auth.middleware";
 import { uploadFile, uploadToS3 } from "@middlewares/file-uploader.middleware";
 
+import { NODE_ENV } from "@config/index";
+
 export class FileRoute implements Routes {
   public path = "files";
   public router = Router();
@@ -16,11 +18,14 @@ export class FileRoute implements Routes {
   }
 
   private initializeRoutes() {
+    const uploadMiddlewares =
+      NODE_ENV === "production"
+        ? [AuthMiddleware, uploadFile.single("file"), uploadToS3]
+        : [AuthMiddleware, uploadFile.single("file")];
+
     this.router.post(
-      `/v1/${this.path}/upload`, 
-      AuthMiddleware,
-      uploadFile.single("file"), 
-      uploadToS3,
+      `/v1/${this.path}/upload`,
+      ...uploadMiddlewares,
       this.file.uploadFile
     );
     this.router.get(

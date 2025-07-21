@@ -5,9 +5,12 @@ import { FileModel } from "@models/files.model";
 import { UserRole } from '@interfaces/authentication/user-role.interface';
 
 export type UserCreationAttributes = Optional<User, "pk" | "uuid" | "full_name" | "display_picture">;
-export class UserModel extends Model<User, UserCreationAttributes> {
-  // No public fields here! Let Sequelize handle attributes.
+export class UserModel extends Model<User, UserCreationAttributes> implements User {
+
 }
+
+// Declaration merging: this tells TypeScript that UserModel instances have User properties
+export interface UserModel extends User {}
 
 export default function (sequelize: Sequelize): typeof UserModel {
   UserModel.init(
@@ -28,12 +31,6 @@ export default function (sequelize: Sequelize): typeof UserModel {
       display_picture: {
         type: DataTypes.INTEGER,
         allowNull: true,
-        // references: {
-        //   model: FileModel,
-        //   key: "pk",
-        // },
-        // onDelete: "CASCADE",
-        // onUpdate: "CASCADE",
       },
       email: {
         allowNull: false,

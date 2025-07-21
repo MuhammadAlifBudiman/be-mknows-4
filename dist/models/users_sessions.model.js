@@ -18,7 +18,23 @@ _export(exports, {
 });
 const _sequelize = require("sequelize");
 const _usersmodel = require("./users.model");
+function _define_property(obj, key, value) {
+    if (key in obj) {
+        Object.defineProperty(obj, key, {
+            value: value,
+            enumerable: true,
+            configurable: true,
+            writable: true
+        });
+    } else {
+        obj[key] = value;
+    }
+    return obj;
+}
 let UserSessionModel = class UserSessionModel extends _sequelize.Model {
+    constructor(...args){
+        super(...args), _define_property(this, "uuid", void 0);
+    }
 };
 function _default(sequelize) {
     UserSessionModel.init({

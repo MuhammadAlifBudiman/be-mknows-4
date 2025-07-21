@@ -20,6 +20,13 @@ export class UserService {
     return findUser;
   }
 
+  public async findUserByUUID(user_uuid: string): Promise<User>{
+    const db = await getDB();
+    const findUser: User = await db.Users.findOne({ where: { uuid: user_uuid } });
+    if (!findUser) throw new HttpException(false, 409, "User doesn't exist");
+    return findUser;
+  }
+
   public async createUser(userData: CreateUserDto): Promise<User> {
     const db = await getDB();
     const findUser: User = await db.Users.findOne({ where: { email: userData.email } });
@@ -29,21 +36,21 @@ export class UserService {
     return createUserData;
   }
 
-  public async updateUser(userId: number, userData: CreateUserDto): Promise<User> {
+  public async updateUser(user_uuid: string, userData: CreateUserDto): Promise<User> {
     const db = await getDB();
-    const findUser: User = await db.Users.findByPk(userId);
+    const findUser: User = await db.Users.findOne({ where: { uuid: user_uuid } });
     if (!findUser) throw new HttpException(false, 409, "User doesn't exist");
     const hashedPassword = await hash(userData.password, 10);
-    await db.Users.update({ ...userData, password: hashedPassword }, { where: { pk: userId } });
-    const updateUser: User = await db.Users.findByPk(userId);
+    await db.Users.update({ ...userData, password: hashedPassword }, { where: { uuid: user_uuid } });
+    const updateUser: User = await db.Users.findOne({ where: { uuid: user_uuid } });
     return updateUser;
   }
 
-  public async deleteUser(userId: number): Promise<User> {
+  public async deleteUser(user_uuid: string): Promise<User> {
     const db = await getDB();
-    const findUser: User = await db.Users.findByPk(userId);
+    const findUser: User = await db.Users.findOne({ where: { uuid: user_uuid } });
     if (!findUser) throw new HttpException(false, 409, "User doesn't exist");
-    await db.Users.destroy({ where: { pk: userId } });
+    await db.Users.destroy({ where: { uuid: user_uuid } });
     return findUser;
   }
 }

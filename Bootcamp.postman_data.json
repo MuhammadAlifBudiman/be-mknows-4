@@ -1,0 +1,16 @@
+[
+    {
+        "role": "ADMIN",
+        "email": "admin@email.com",
+        "password": "password",
+        "full_name": "Admin"
+    },
+    {
+        "role": "USER",
+        "email": "user@email.com",
+        "password": "password",
+        "full_name": "User"
+
+    }
+]
+

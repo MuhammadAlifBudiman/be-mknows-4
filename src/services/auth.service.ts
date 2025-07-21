@@ -175,4 +175,45 @@ export class AuthService {
 
     return { email: user.email };
   };
+
+  public async assignRoleToUser(user_uuid: string, role: string): Promise<{ user_role: string }> {
+    const db = await getDB();
+    const transaction = await db.sequelize.transaction();
+
+    try {
+      const user = await db.Users.findOne({ attributes: ["pk"], where: { uuid: user_uuid } });
+      if (!user) {
+        throw new HttpException(false, 404, "User not found");
+      }
+      const roleRecord = await db.Roles.findOne({ where: { name: role } });
+
+      if (!roleRecord) {
+        throw new HttpException(false, 404, `Role '${role}' not found`);
+      }
+
+      // Check if user already has this role
+      const existingUserRole = await db.UsersRoles.findOne({ where: { user_id: user.pk, role_id: roleRecord.pk } });
+      if (existingUserRole) {
+        await transaction.rollback();
+        return { user_role: roleRecord.name }; // Already assigned, return success
+      }
+
+      // Assign new role
+      await this.asignUserRole(user.pk, roleRecord.pk, transaction);
+      await transaction.commit();
+
+      const userRole = await db.UsersRoles.findOne({ where: { user_id: user.pk, role_id: roleRecord.pk }, attributes: ["role_id"] });
+      if (!userRole) {
+        throw new HttpException(false, 500, "Failed to assign role to user");
+      }
+
+      // Return the assigned role name
+      userRole.name = roleRecord.name; // Add name to the userRole object for response
+
+      return { user_role: userRole.name };
+    }catch (error){
+      await transaction.rollback();
+      throw error;
+    }
+  }
 }

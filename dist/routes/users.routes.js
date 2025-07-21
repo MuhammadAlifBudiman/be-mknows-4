@@ -36,7 +36,7 @@ let UserRoute = class UserRoute {
         this.router.get(`/v1/${this.path}`, this.limitter.default(), _authmiddleware.AuthMiddleware, (0, _authmiddleware.AuthorizedRoles)([
             "ADMIN"
         ]), this.user.getUsers);
-        this.router.get(`/v1/${this.path}/:id`, this.user.getUserById);
+        this.router.get(`/v1/${this.path}/:uuid`, this.user.getUserByUUID);
     }
     constructor(){
         _define_property(this, "path", "users");

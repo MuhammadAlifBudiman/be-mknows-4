@@ -123,6 +123,13 @@ let AuthService = class AuthService {
                 expiration_time: validInMinutes
             });
             await transaction.commit();
+            if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
+                return {
+                    uuid: createUser.uuid,
+                    email: createUser.email,
+                    otp: otp.key
+                };
+            }
             return {
                 uuid: createUser.uuid,
                 email: createUser.email
@@ -270,6 +277,64 @@ let AuthService = class AuthService {
         return {
             email: user.email
         };
+    }
+    async assignRoleToUser(user_uuid, role) {
+        const db = await (0, _dblazy.getDB)();
+        const transaction = await db.sequelize.transaction();
+        try {
+            const user = await db.Users.findOne({
+                attributes: [
+                    "pk"
+                ],
+                where: {
+                    uuid: user_uuid
+                }
+            });
+            if (!user) {
+                throw new _HttpException.HttpException(false, 404, "User not found");
+            }
+            const roleRecord = await db.Roles.findOne({
+                where: {
+                    name: role
+                }
+            });
+            if (!roleRecord) {
+                throw new _HttpException.HttpException(false, 404, `Role '${role}' not found`);
+            }
+            const existingUserRole = await db.UsersRoles.findOne({
+                where: {
+                    user_id: user.pk,
+                    role_id: roleRecord.pk
+                }
+            });
+            if (existingUserRole) {
+                await transaction.rollback();
+                return {
+                    user_role: roleRecord.name
+                };
+            }
+            await this.asignUserRole(user.pk, roleRecord.pk, transaction);
+            await transaction.commit();
+            const userRole = await db.UsersRoles.findOne({
+                where: {
+                    user_id: user.pk,
+                    role_id: roleRecord.pk
+                },
+                attributes: [
+                    "role_id"
+                ]
+            });
+            if (!userRole) {
+                throw new _HttpException.HttpException(false, 500, "Failed to assign role to user");
+            }
+            userRole.name = roleRecord.name;
+            return {
+                user_role: userRole.name
+            };
+        } catch (error) {
+            await transaction.rollback();
+            throw error;
+        }
     }
 };
 AuthService = _ts_decorate([

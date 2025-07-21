@@ -14,7 +14,7 @@ export class UserController {
 
   public getUseragent = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     const userAgentPayload: UserAgent = getUserAgent(req);
-    res.status(200).json(apiResponse(200, "OK", "All Users Retrieved", userAgentPayload));
+    res.status(200).json(apiResponse(200, "OK", "User Agent Retrieved", userAgentPayload));
   });
 
   public getUsers = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
@@ -23,40 +23,12 @@ export class UserController {
     res.status(200).json(apiResponse(200, "OK", "All Users Retrieved", findAllUsersData));
   });
 
-  public getUserById = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-    const userId = Number(req.params.id);
-    const findOneUserData: User = await this.user.findUserById(userId);
+  public getUserByUUID = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const user_uuid = req.params.uuid;
+    const findOneUserData: User = await this.user.findUserByUUID(user_uuid);
 
-    res.status(200).json({ data: findOneUserData, message: "findOne" });
+    res.status(200).json(apiResponse(200, "OK", "User Retrieved", findOneUserData));
   });
 
-  // public createUser = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  //   const userData: CreateUserDto = req.body;
-  //   const createUserData: User = await this.user.createUser(userData);
 
-  //   res.status(201).json({ data: createUserData, message: "created" });
-  // });
-
-  // public updateUser = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  //   try {
-  //     const userId = Number(req.params.id);
-  //     const userData: CreateUserDto = req.body;
-  //     const updateUserData: User = await this.user.updateUser(userId, userData);
-
-  //     res.status(200).json({ data: updateUserData, message: "updated" });
-  //   } catch (error) {
-  //     next(error);
-  //   }
-  // });
-
-  // public deleteUser = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
-  //   try {
-  //     const userId = Number(req.params.id);
-  //     const deleteUserData: User = await this.user.deleteUser(userId);
-
-  //     res.status(200).json({ data: deleteUserData, message: "deleted" });
-  //   } catch (error) {
-  //     next(error);
-  //   }
-  // });
 }
