@@ -2,10 +2,10 @@
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-Object.defineProperty(exports, "DB", {
+Object.defineProperty(exports, "getDB", {
     enumerable: true,
     get: function() {
-        return DB;
+        return getDB;
     }
 });
 const _sequelize = require("sequelize");
@@ -33,9 +33,19 @@ function _interop_require_default(obj) {
         default: obj
     };
 }
-const dbConfig = _database.default[_index.NODE_ENV] || _database.default["development"];
-let DB;
-(async ()=>{
+let DB = null;
+let initializing = false;
+let initialized = false;
+async function getDB() {
+    if (initialized) return DB;
+    if (initializing) {
+        while(!initialized){
+            await new Promise((resolve)=>setTimeout(resolve, 50));
+        }
+        return DB;
+    }
+    initializing = true;
+    const dbConfig = _database.default[_index.NODE_ENV] || _database.default["development"];
     const sequelize = new _sequelize.Sequelize(dbConfig.database, dbConfig.username, dbConfig.password, dbConfig);
     await sequelize.authenticate();
     _logger.logger.info(`=> Database Connected on ${_index.NODE_ENV}`);
@@ -59,6 +69,8 @@ let DB;
         sequelize,
         Sequelize: _sequelize.Sequelize
     };
-})();
+    initialized = true;
+    return DB;
+}
 
-//# sourceMappingURL=index.js.map
+//# sourceMappingURL=db-lazy.js.map

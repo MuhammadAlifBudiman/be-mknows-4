@@ -9,7 +9,7 @@ Object.defineProperty(exports, "CategoryService", {
     }
 });
 const _typedi = require("typedi");
-const _database = require("../database");
+const _dblazy = require("../database/db-lazy");
 const _HttpException = require("../exceptions/HttpException");
 function _define_property(obj, key, value) {
     if (key in obj) {
@@ -47,7 +47,7 @@ function _ts_decorate(decorators, target, key, desc) {
 }
 let CategoryService = class CategoryService {
     async getCategories() {
-        return await _database.DB.Categories.findAll({
+        return await (await (0, _dblazy.getDB)()).Categories.findAll({
             attributes: {
                 exclude: [
                     "pk"
@@ -56,7 +56,7 @@ let CategoryService = class CategoryService {
         });
     }
     async createCategory(data) {
-        const category = await _database.DB.Categories.create(_object_spread({}, data));
+        const category = await (await (0, _dblazy.getDB)()).Categories.create(_object_spread({}, data));
         delete category.dataValues.pk;
         return category;
     }
@@ -67,7 +67,7 @@ let CategoryService = class CategoryService {
         if (Object.keys(updatedData).length === 0) {
             throw new _HttpException.HttpException(false, 400, "Some field is required");
         }
-        const [_, [category]] = await _database.DB.Categories.update(updatedData, {
+        const [_, [category]] = await (await (0, _dblazy.getDB)()).Categories.update(updatedData, {
             where: {
                 uuid: category_id
             },
@@ -77,7 +77,7 @@ let CategoryService = class CategoryService {
         return category;
     }
     async deleteCategory(category_id) {
-        const category = await _database.DB.Categories.findOne({
+        const category = await (await (0, _dblazy.getDB)()).Categories.findOne({
             where: {
                 uuid: category_id
             }

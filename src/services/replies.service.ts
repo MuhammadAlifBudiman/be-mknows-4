@@ -1,4 +1,4 @@
-import { DB } from "@/database";
+import { getDB } from "@/database/db-lazy";
 import { CreateReplyDto, UpdateReplyDto } from "@/dtos/replies.dto";
 import { HttpException } from "@exceptions/HttpException";
 import { CommentReply, CommentReplyParsed } from "@/interfaces/comment.interface";
@@ -26,6 +26,7 @@ export class ReplyService {
     }
 
   public async getReplies(): Promise<{ replies: CommentReplyParsed[] }> {
+    const DB = await getDB();
     const reply = await DB.CommentsReplies.findAll({});
 
     const likeCountPromises = reply.map(reply => {
@@ -45,6 +46,7 @@ export class ReplyService {
   }
 
   public async getRepliesByComment(comment_id: string): Promise<{ replies: CommentReplyParsed[] }> {
+    const DB = await getDB();
     const comment = await DB.ArticlesComments.findOne({ where: { uuid: comment_id }, attributes: ["pk"] });
     if(!comment) {
       throw new HttpException(false, 404, "Comment is not found");
@@ -70,6 +72,7 @@ export class ReplyService {
   }
 
   public async getReplyById(reply_id: string): Promise<CommentReplyParsed> {
+    const DB = await getDB();
     const reply = await DB.CommentsReplies.findOne({ where: { uuid: reply_id } });
     if (!reply) {
       throw new HttpException(false, 400, "Reply is not found");
@@ -86,6 +89,7 @@ export class ReplyService {
   }
 
   public async createReply(comment_id: string, author_id: number, data: CreateReplyDto): Promise<CommentReplyParsed> {
+    const DB = await getDB();
     const comment = await DB.ArticlesComments.findOne({ where: { uuid: comment_id }, attributes: ["pk"] });
     const reply = await DB.CommentsReplies.create({ comment_id: comment.pk, author_id, ...data });
     delete reply.dataValues.pk;
@@ -94,6 +98,7 @@ export class ReplyService {
   }
 
   public async updateReply(reply_id: string, data: UpdateReplyDto): Promise<CommentReplyParsed> {
+    const DB = await getDB();
     const updatedData: any = {};
     
     if (data.reply) updatedData.reply = data.reply;
@@ -114,6 +119,7 @@ export class ReplyService {
   }
 
   public async deleteReply(reply_id: string): Promise<boolean> {
+    const DB = await getDB();
     const reply = await DB.CommentsReplies.findOne({ where: { uuid: reply_id }});
 
     if(!reply) {
@@ -138,6 +144,7 @@ export class ReplyService {
   }
 
   public async likeReply(reply_id: string, user_id: number): Promise<object> {
+    const DB = await getDB();
     const reply = await DB.CommentsReplies.findOne({ where: { uuid: reply_id }});
 
     if(!reply) {

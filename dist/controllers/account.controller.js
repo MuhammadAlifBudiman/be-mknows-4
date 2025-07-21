@@ -48,7 +48,7 @@ let AccountController = class AccountController {
             const user_id = req.user.pk;
             const updatedProfile = req.body;
             const user = await this.account.updateUserProfile(user_id, updatedProfile);
-            res.status(200).json((0, _apiResponse.apiResponse)(200, "OK", "Get Profile Success", user));
+            res.status(200).json((0, _apiResponse.apiResponse)(200, "OK", "Update Profile Success", user));
         }));
     }
 };

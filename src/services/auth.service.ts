@@ -4,7 +4,7 @@ import { Service } from "typedi";
 import { Transaction } from "sequelize";
 
 import { SECRET_KEY } from "@config/index";
-import { DB } from "@database";
+import { getDB } from "@/database/db-lazy";
 
 import { OTPService } from "@services/otps.service";
 
@@ -31,11 +31,11 @@ const createCookie = (TokenPayload: TokenPayload): string => {
 
 @Service()
 export class AuthService {
-  public async signup(userData: CreateUserDto): Promise<{ uuid: string, email: string }> {
-    const transaction = await DB.sequelize.transaction();
+  public async signup(userData: CreateUserDto): Promise<{ uuid: string, email: string, otp?: string }> {
+    const transaction = await (await getDB()).sequelize.transaction();
 
     try {
-      const existingUser = await DB.Users.findOne({ where: { email: userData.email }, transaction });
+      const existingUser = await (await getDB()).Users.findOne({ where: { email: userData.email }, transaction });
 
       if (existingUser) {
         throw new HttpException(false, 409, `This email ${userData.email} already exists`);
@@ -43,7 +43,7 @@ export class AuthService {
   
       const hashedPassword = await hash(userData.password, 10);
   
-      const createUser = await DB.Users.create(
+      const createUser = await (await getDB()).Users.create(
         { ...userData, password: hashedPassword },
         { transaction }
       );
@@ -66,6 +66,10 @@ export class AuthService {
 
       await transaction.commit();
       
+      // Only include OTP key in response in development or test
+      if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
+        return { uuid: createUser.uuid, email: createUser.email, otp: otp.key };
+      }
       return { uuid: createUser.uuid, email: createUser.email };
     } catch (error) {
       await transaction.rollback();
@@ -74,7 +78,7 @@ export class AuthService {
   }
 
   public async login(userData: CreateUserDto, userAgent: UserAgent): Promise<{ cookie: string; accessToken: string }> {
-    const findUser: User = await DB.Users.findOne({ attributes: ["pk", "uuid", "password", "email_verified_at"], where: { email: userData.email } });
+    const findUser: User = await (await getDB()).Users.findOne({ attributes: ["pk", "uuid", "password", "email_verified_at"], where: { email: userData.email } });
     if (!findUser) throw new HttpException(false, 409, `This email ${userData.email} was not found`);
 
     const isPasswordMatching: boolean = await compare(userData.password, findUser.password);
@@ -94,7 +98,7 @@ export class AuthService {
   }
 
   public async logout(userData: User, userSessionId: string): Promise<boolean> {
-    const findUser: User = await DB.Users.findOne({ where: { pk: userData.pk } });
+    const findUser: User = await (await getDB()).Users.findOne({ where: { pk: userData.pk } });
     if (!findUser) throw new HttpException(false, 409, "User doesn't exist");
 
     const logout = await this.logoutSessionActive({ uid: findUser.uuid, sid: userSessionId });
@@ -102,27 +106,27 @@ export class AuthService {
   }
 
   public async checkSessionActive(session_id: string): Promise<UserSession> {
-    const userSession = await DB.UsersSessions.findOne({ 
+    const userSession = await (await getDB()).UsersSessions.findOne({ 
       where: { uuid: session_id, status: "ACTIVE" },
-      include: [{ model: DB.Users, as: "user" }]
+      include: [{ model: (await getDB()).Users, as: "user" }]
     });
 
     return userSession || null;
   };
 
   public async getUserRoles(user_id: number): Promise<UserRole[]> {
-    const roles = await DB.UsersRoles.findAll({ 
+    const roles = await (await getDB()).UsersRoles.findAll({ 
       where: { user_id },
-      include: [{ model: DB.Roles, as: "role" }]
+      include: [{ model: (await getDB()).Roles, as: "role" }]
     });
 
     return roles;
   };
 
   public async logoutSessionActive(data: { uid: string, sid: string }): Promise<boolean> {
-    const userSession = await DB.UsersSessions.findOne({ 
+    const userSession = await (await getDB()).UsersSessions.findOne({ 
       where: { uuid: data.sid, status: "ACTIVE" },
-      include: { model: DB.Users, as: "user" }
+      include: { model: (await getDB()).Users, as: "user" }
     });
   
     if (userSession) {
@@ -135,7 +139,7 @@ export class AuthService {
   }
 
   public async createUserSession(data: { pk: number, useragent: string, ip_address: string }): Promise<UserSession> {
-    const session = await DB.UsersSessions.create({
+    const session = await (await getDB()).UsersSessions.create({
       user_id: data.pk,
       useragent: data.useragent,
       ip_address: data.ip_address,
@@ -146,17 +150,17 @@ export class AuthService {
   };
 
   private async getRoleId(name: string): Promise<number> {
-    const role = await DB.Roles.findOne({ where: { name }});
+    const role = await (await getDB()).Roles.findOne({ where: { name }});
     return role.pk;
   }
 
   private async asignUserRole(user_id: number, role_id: number, transaction: Transaction): Promise<UserRole> {
-    const role = await DB.UsersRoles.create({ user_id, role_id }, { transaction });
+    const role = await (await getDB()).UsersRoles.create({ user_id, role_id }, { transaction });
     return role;
   }
 
   public async verifyEmail(user_uuid: string, otp: string): Promise<{ email: string }> {
-    const user = await DB.Users.findOne({ attributes: ["pk"], where: { uuid: user_uuid } } );
+    const user = await (await getDB()).Users.findOne({ attributes: ["pk"], where: { uuid: user_uuid } } );
     if(!user) throw new HttpException(false, 400, "Invalid UUID");
     
     const valid = await new OTPService().findOTP({ 
@@ -171,4 +175,45 @@ export class AuthService {
 
     return { email: user.email };
   };
+
+  public async assignRoleToUser(user_uuid: string, role: string): Promise<{ user_role: string }> {
+    const db = await getDB();
+    const transaction = await db.sequelize.transaction();
+
+    try {
+      const user = await db.Users.findOne({ attributes: ["pk"], where: { uuid: user_uuid } });
+      if (!user) {
+        throw new HttpException(false, 404, "User not found");
+      }
+      const roleRecord = await db.Roles.findOne({ where: { name: role } });
+
+      if (!roleRecord) {
+        throw new HttpException(false, 404, `Role '${role}' not found`);
+      }
+
+      // Check if user already has this role
+      const existingUserRole = await db.UsersRoles.findOne({ where: { user_id: user.pk, role_id: roleRecord.pk } });
+      if (existingUserRole) {
+        await transaction.rollback();
+        return { user_role: roleRecord.name }; // Already assigned, return success
+      }
+
+      // Assign new role
+      await this.asignUserRole(user.pk, roleRecord.pk, transaction);
+      await transaction.commit();
+
+      const userRole = await db.UsersRoles.findOne({ where: { user_id: user.pk, role_id: roleRecord.pk }, attributes: ["role_id"] });
+      if (!userRole) {
+        throw new HttpException(false, 500, "Failed to assign role to user");
+      }
+
+      // Return the assigned role name
+      userRole.name = roleRecord.name; // Add name to the userRole object for response
+
+      return { user_role: userRole.name };
+    }catch (error){
+      await transaction.rollback();
+      throw error;
+    }
+  }
 }

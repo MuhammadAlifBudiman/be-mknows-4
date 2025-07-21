@@ -12,26 +12,7 @@ import { ArticleCategoryModel } from '@models/articles_categories.model';
 
 export type ArticleCreationAttributes = Optional<Article, "pk" | "uuid">;
 
-export class ArticleModel extends Model<Article, ArticleCreationAttributes> implements Article {
-  public pk: number;
-  public uuid: string;
-  
-  public title: string;
-  public description: string;
-  public content: string;
-
-  public thumbnail_id: number;
-  public author_id: number;
-
-  // Assosication
-  public readonly thumbnail: File;
-  public readonly author: User;
-  public readonly categories: ArticleCategory[];
-  public views: number;
-  public likes: number;
-  public comments: number;
-  public bookmarks: number;
-
+export class ArticleModel extends Model<Article, ArticleCreationAttributes> {
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
   public readonly deleted_at: Date;

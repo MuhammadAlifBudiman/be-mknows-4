@@ -32,6 +32,9 @@ let AuthRoute = class AuthRoute {
         this.router.post(`/v1/${this.path}/login`, (0, _validationmiddleware.ValidationMiddleware)(_usersdto.LoginUserDto), this.auth.logIn);
         this.router.post(`/v1/${this.path}/logout`, _authmiddleware.AuthMiddleware, this.auth.logOut);
         this.router.post(`/v1/${this.path}/verify`, this.auth.verifyEmail);
+        if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
+            this.router.post(`/v1/${this.path}/:uuid/assign-role`, this.auth.assignRoleToUser);
+        }
     }
     constructor(){
         _define_property(this, "path", "auth");

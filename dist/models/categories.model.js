@@ -32,7 +32,7 @@ function _define_property(obj, key, value) {
 }
 let CategoryModel = class CategoryModel extends _sequelize.Model {
     constructor(...args){
-        super(...args), _define_property(this, "pk", void 0), _define_property(this, "uuid", void 0), _define_property(this, "name", void 0), _define_property(this, "description", void 0), _define_property(this, "created_at", void 0), _define_property(this, "updated_at", void 0), _define_property(this, "deleted_at", void 0);
+        super(...args), _define_property(this, "created_at", void 0), _define_property(this, "updated_at", void 0), _define_property(this, "deleted_at", void 0);
     }
 };
 function _default(sequelize) {

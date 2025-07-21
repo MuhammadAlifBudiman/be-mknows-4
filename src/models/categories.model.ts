@@ -4,13 +4,7 @@ import { Category } from "@interfaces/category.interface";
 
 export type CategoryCreationAttributes = Optional<Category, "pk" | "uuid">;
 
-export class CategoryModel extends Model<Category, CategoryCreationAttributes> implements Category {
-  public pk: number;
-  public uuid: string;
-  
-  public name: string;
-  public description: string;
-
+export class CategoryModel extends Model<Category, CategoryCreationAttributes> {
   public readonly created_at!: Date;
   public readonly updated_at!: Date;
   public readonly deleted_at: Date;

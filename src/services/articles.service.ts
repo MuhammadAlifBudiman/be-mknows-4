@@ -1,6 +1,6 @@
 import { Op, Sequelize } from "sequelize";
 import { Service } from "typedi";
-import { DB } from "@database";
+import { getDB } from "@/database/db-lazy";
 
 import { ArticleModel } from "@models/articles.model";
 
@@ -81,15 +81,15 @@ export class ArticleService {
       }
     }
 
-    const { rows: articles, count } = await DB.Articles.findAndCountAll({ 
+    const { rows: articles, count } = await (await getDB()).Articles.findAndCountAll({ 
       where,
       limit: parseInt(limit),
       offset,
       order: orderClause
     });
 
-    const likeCountPromises = articles.map(article => {
-      return DB.ArticlesLikes.count({
+    const likeCountPromises = articles.map(async article => {
+      return (await getDB()).ArticlesLikes.count({
         where: { article_id: article.pk }
       });
     });
@@ -100,8 +100,8 @@ export class ArticleService {
       article.likes = likeCounts[index];
     });
 
-    const commentCountPromises = articles.map(article => {
-      return DB.ArticlesComments.count({
+    const commentCountPromises = articles.map(async article => {
+      return (await getDB()).ArticlesComments.count({
         where: { article_id: article.pk }
       });
     });
@@ -112,8 +112,8 @@ export class ArticleService {
       article.comments = commentCounts[index];
     });
 
-    const viewCountPromises = articles.map(article => {
-      return DB.ArticlesViews.count({
+    const viewCountPromises = articles.map(async article => {
+      return (await getDB()).ArticlesViews.count({
         where: { article_id: article.pk }
       });
     });
@@ -124,8 +124,8 @@ export class ArticleService {
       article.views = viewCounts[index];
     });
 
-    const bookmarkCountPromises = articles.map(article => {
-      return DB.ArticlesBookmarks.count({
+    const bookmarkCountPromises = articles.map(async article => {
+      return (await getDB()).ArticlesBookmarks.count({
         where: { article_id: article.pk }
       });
     });
@@ -148,7 +148,7 @@ export class ArticleService {
   }
 
   public async getArticleById(article_id: string): Promise<ArticleParsed> {
-    const article = await DB.Articles.findOne({
+    const article = await (await getDB()).Articles.findOne({
       where: { uuid: article_id },
     })
 
@@ -156,25 +156,25 @@ export class ArticleService {
       throw new HttpException(false, 404, "Article is not found");
     }
 
-    const likesCount = await DB.ArticlesLikes.count({
+    const likesCount = await (await getDB()).ArticlesLikes.count({
       where: { article_id: article.pk }
     });
         
     article.likes = likesCount;
 
-    const commentsCount = await DB.ArticlesComments.count({
+    const commentsCount = await (await getDB()).ArticlesComments.count({
       where: { article_id: article.pk }
     });
 
     article.comments = commentsCount;
 
-    const viewCount = await DB.ArticlesViews.count({
+    const viewCount = await (await getDB()).ArticlesViews.count({
       where: { article_id: article.pk }
     });
 
     article.views = viewCount;
 
-    const bookmarkCount = await DB.ArticlesBookmarks.count({
+    const bookmarkCount = await (await getDB()).ArticlesBookmarks.count({
       where: { article_id: article.pk }
     });
 
@@ -185,12 +185,12 @@ export class ArticleService {
   }
 
   public async getArticlesByCategory(query: ArticleQueryParams, category_id: string): Promise<{ articles: ArticleParsed[], pagination: Pagination }> {
-    const category = await DB.Categories.findOne({ attributes: ["pk"], where:{ uuid: category_id } });
+    const category = await (await getDB()).Categories.findOne({ attributes: ["pk"], where:{ uuid: category_id } });
     if (!category) {
       throw new HttpException(false, 400, "Category is not found");
     }
 
-    const articlesCategory = await DB.ArticlesCategories.findAll({ attributes: ["article_id"], where: { category_id: category.pk } });
+    const articlesCategory = await (await getDB()).ArticlesCategories.findAll({ attributes: ["article_id"], where: { category_id: category.pk } });
 
     if(!articlesCategory) {
       throw new HttpException(false, 400, "Article with that category is not found");
@@ -198,15 +198,15 @@ export class ArticleService {
 
     const articleIds = articlesCategory.map(articleCategory => articleCategory.article_id);
 
-    const { rows: articles } = await DB.Articles.findAndCountAll({ 
+    const { rows: articles } = await (await getDB()).Articles.findAndCountAll({ 
       where: { 
         pk: { [Op.in]: articleIds }
       }
     });
     
-    const likeCountPromises = articles.map(article => {
+    const likeCountPromises = articles.map(async article => {
 
-      return DB.ArticlesLikes.count({
+      return (await getDB()).ArticlesLikes.count({
         where: { article_id: article.pk }
       });
     });
@@ -218,8 +218,8 @@ export class ArticleService {
       article.likes = likeCounts[index];
     });
 
-    const commentCountPromises = articles.map(article => {
-      return DB.ArticlesComments.count({
+    const commentCountPromises = articles.map(async article => {
+      return (await getDB()).ArticlesComments.count({
         where: { article_id: article.pk }
       });
     });
@@ -230,8 +230,8 @@ export class ArticleService {
       article.comments = commentCounts[index];
     });
 
-    const viewCountPromises = articles.map(article => {
-      return DB.ArticlesViews.count({
+    const viewCountPromises = articles.map(async article => {
+      return (await getDB()).ArticlesViews.count({
         where: { article_id: article.pk }
       });
     });
@@ -242,8 +242,8 @@ export class ArticleService {
       article.views = viewCounts[index];
     });
 
-    const bookmarkCountPromises = articles.map(article => {
-      return DB.ArticlesBookmarks.count({
+    const bookmarkCountPromises = articles.map(async article => {
+      return (await getDB()).ArticlesBookmarks.count({
         where: { article_id: article.pk }
       });
     });
@@ -260,10 +260,10 @@ export class ArticleService {
   }
 
   public async createArticle(author_id: number, data: CreateArticleDto): Promise<ArticleParsed> {
-    const thumbnail = await DB.Files.findOne({ attributes: ["pk"], where: { uuid: data.thumbnail }});
+    const thumbnail = await (await getDB()).Files.findOne({ attributes: ["pk"], where: { uuid: data.thumbnail }});
     if(!thumbnail) throw new HttpException(false, 404, "File is not found");
     
-    const categories = await DB.Categories.findAll({
+    const categories = await (await getDB()).Categories.findAll({
       attributes: ["pk"],
       where: {
         uuid: { [Op.in]: data.categories }
@@ -274,10 +274,10 @@ export class ArticleService {
       throw new HttpException(false, 404, "Categories is not found");
     }
 
-    const transaction = await DB.sequelize.transaction();
+    const transaction = await (await getDB()).sequelize.transaction();
 
     try {
-      const article = await DB.Articles.create({
+      const article = await (await getDB()).Articles.create({
         title: data.title,
         description: data.description,
         content: data.content,
@@ -287,7 +287,7 @@ export class ArticleService {
 
       const categoryIds = categories.map(category => category.pk);
 
-      await DB.ArticlesCategories.bulkCreate(
+      await (await getDB()).ArticlesCategories.bulkCreate(
         categoryIds.map(categoryId => ({
           article_id: article.pk,
           category_id: categoryId
@@ -304,7 +304,7 @@ export class ArticleService {
   }
   
   public async updateArticle(article_id: string, author_id: number, data: UpdateArticleDto): Promise<ArticleParsed> {
-    const article = await DB.Articles.findOne({ where: { uuid: article_id }});
+    const article = await (await getDB()).Articles.findOne({ where: { uuid: article_id }});
 
     if(!article) {
       throw new HttpException(false, 400, "Article is not found");
@@ -317,7 +317,7 @@ export class ArticleService {
     if (data.content) updatedData.content = data.content;
     
     if (data.thumbnail) {
-      const file = await DB.Files.findOne({ 
+      const file = await (await getDB()).Files.findOne({ 
         attributes: ["pk"], 
         where: { 
           uuid: data.thumbnail, 
@@ -336,10 +336,10 @@ export class ArticleService {
       throw new HttpException(false, 400, "Some field is required");
     }
 
-    const transaction = await DB.sequelize.transaction();
+    const transaction = await (await getDB()).sequelize.transaction();
     try {
       if (data.categories) {
-        const categories = await DB.Categories.findAll({
+        const categories = await (await getDB()).Categories.findAll({
           attributes: ["pk"],
           where: {
             uuid: { [Op.in]: data.categories }
@@ -351,7 +351,7 @@ export class ArticleService {
         }
 
         if (categories.length >= 0) {
-          await DB.ArticlesCategories.destroy({
+          await (await getDB()).ArticlesCategories.destroy({
             where: { article_id: article.pk },
             force: true,
             transaction
@@ -359,7 +359,7 @@ export class ArticleService {
 
           const categoryIds = categories.map(category => category.pk);
 
-          await DB.ArticlesCategories.bulkCreate(
+          await (await getDB()).ArticlesCategories.bulkCreate(
             categoryIds.map(categoryId => ({
               article_id: article.pk,
               category_id: categoryId
@@ -369,7 +369,7 @@ export class ArticleService {
       }
 
       if (Object.keys(updatedData).length > 0) {
-        await DB.Articles.update(updatedData, {
+        await (await getDB()).Articles.update(updatedData, {
           where: { uuid: article_id },
           returning: true,
           transaction,
@@ -386,29 +386,29 @@ export class ArticleService {
   }
 
   public async deleteArticle(article_id: string, author_id: number): Promise<boolean> {
-    const article = await DB.Articles.findOne({ where: { uuid: article_id, author_id }});
+    const article = await (await getDB()).Articles.findOne({ where: { uuid: article_id, author_id }});
     if (!article) {
       throw new HttpException(false, 400, "Article is not found");
     }
 
-    const comments = await DB.ArticlesComments.findAll({ attributes: ["pk"], where: { article_id: article.pk }});
+    const comments = await (await getDB()).ArticlesComments.findAll({ attributes: ["pk"], where: { article_id: article.pk }});
     const commentIds = comments.map(comment => comment.pk);
 
-    const replies = await DB.CommentsReplies.findAll({ attributes: ["pk"], where: { comment_id: { [Op.in]: commentIds } }});
+    const replies = await (await getDB()).CommentsReplies.findAll({ attributes: ["pk"], where: { comment_id: { [Op.in]: commentIds } }});
     const replyIds = replies.map(reply => reply.pk);
 
-    const transaction = await DB.sequelize.transaction();
+    const transaction = await (await getDB()).sequelize.transaction();
     try {
       await article.destroy({ transaction });
 
       await Promise.all([
-        DB.ArticlesCategories.destroy({ where: { article_id: article.pk }, transaction }),
-        DB.ArticlesLikes.destroy({ where: { article_id: article.pk }, transaction }),
-        DB.ArticlesBookmarks.destroy({ where: { article_id: article.pk }, transaction }),
-        DB.ArticlesComments.destroy({ where: { article_id: article.pk }, transaction }),
-        DB.ArticleCommentsLikes.destroy({ where: { comment_id: { [Op.in]: commentIds } }, transaction }),
-        DB.CommentsReplies.destroy({ where: { comment_id: { [Op.in]: commentIds } }, transaction }),
-        DB.CommentsRepliesLikes.destroy({ where: { reply_id: { [Op.in]: replyIds } }, transaction }),
+        (await getDB()).ArticlesCategories.destroy({ where: { article_id: article.pk }, transaction }),
+        (await getDB()).ArticlesLikes.destroy({ where: { article_id: article.pk }, transaction }),
+        (await getDB()).ArticlesBookmarks.destroy({ where: { article_id: article.pk }, transaction }),
+        (await getDB()).ArticlesComments.destroy({ where: { article_id: article.pk }, transaction }),
+        (await getDB()).ArticleCommentsLikes.destroy({ where: { comment_id: { [Op.in]: commentIds } }, transaction }),
+        (await getDB()).CommentsReplies.destroy({ where: { comment_id: { [Op.in]: commentIds } }, transaction }),
+        (await getDB()).CommentsRepliesLikes.destroy({ where: { reply_id: { [Op.in]: replyIds } }, transaction }),
       ]);
       
       await transaction.commit();
@@ -421,24 +421,24 @@ export class ArticleService {
   }
 
   public async likeArticle(user_id: number, article_id: string): Promise<object> {
-    const article = await DB.Articles.findOne({ attributes: ["pk"], where: { uuid: article_id } });
+    const article = await (await getDB()).Articles.findOne({ attributes: ["pk"], where: { uuid: article_id } });
     if (!article) {
       throw new HttpException(false, 400, "Article is not found");
     }
 
-    const transaction = await DB.sequelize.transaction();
+    const transaction = await (await getDB()).sequelize.transaction();
     try {
       const [articleLike, articleLikesCount] = await Promise.all([
-        DB.ArticlesLikes.findOne({ where: { article_id: article.pk, user_id }, transaction }),
-        DB.ArticlesLikes.count({ where: { article_id: article.pk, user_id }, transaction })
+        (await getDB()).ArticlesLikes.findOne({ where: { article_id: article.pk, user_id }, transaction }),
+        (await getDB()).ArticlesLikes.count({ where: { article_id: article.pk, user_id }, transaction })
       ]);
   
       if (!articleLike) {
-        await DB.ArticlesLikes.create({ article_id: article.pk, user_id }, { transaction });
+        await (await getDB()).ArticlesLikes.create({ article_id: article.pk, user_id }, { transaction });
         await transaction.commit();
         return { article_id, is_liked: true, likes: articleLikesCount + 1 }; 
       } else {
-        await DB.ArticlesLikes.destroy({ where: { article_id: article.pk, user_id }, force: true, transaction });
+        await (await getDB()).ArticlesLikes.destroy({ where: { article_id: article.pk, user_id }, force: true, transaction });
         await transaction.commit();
         return { article_id, is_liked: false, likes: articleLikesCount - 1 }; 
       }
@@ -449,24 +449,24 @@ export class ArticleService {
   }
 
   public async bookmarkArticle(user_id: number, article_id: string): Promise<object> {
-    const article = await DB.Articles.findOne({ attributes: ["pk"], where: { uuid: article_id } });
+    const article = await (await getDB()).Articles.findOne({ attributes: ["pk"], where: { uuid: article_id } });
     if (!article) {
       throw new HttpException(false, 400, "Article is not found");
     }
 
-    const transaction = await DB.sequelize.transaction();
+    const transaction = await (await getDB()).sequelize.transaction();
     try {
       const [articleBookmark, articleBookmarksCount] = await Promise.all([
-        DB.ArticlesBookmarks.findOne({ where: { article_id: article.pk, user_id }, transaction }),
-        DB.ArticlesBookmarks.count({ where: { article_id: article.pk, user_id }, transaction })
+        (await getDB()).ArticlesBookmarks.findOne({ where: { article_id: article.pk, user_id }, transaction }),
+        (await getDB()).ArticlesBookmarks.count({ where: { article_id: article.pk, user_id }, transaction })
       ]);
   
       if (!articleBookmark) {
-        await DB.ArticlesBookmarks.create({ article_id: article.pk, user_id }, { transaction });
+        await (await getDB()).ArticlesBookmarks.create({ article_id: article.pk, user_id }, { transaction });
         await transaction.commit();
         return { article_id, is_bookmarked: true, bookmarks: articleBookmarksCount + 1 }; 
       } else {
-        await DB.ArticlesBookmarks.destroy({ where: { article_id: article.pk, user_id }, force: true, transaction });
+        await (await getDB()).ArticlesBookmarks.destroy({ where: { article_id: article.pk, user_id }, force: true, transaction });
         await transaction.commit();
         return { article_id, is_bookmarked: false, bookmarks: articleBookmarksCount - 1 }; 
       }
@@ -478,11 +478,11 @@ export class ArticleService {
 
   public async getBookmarkByMe(user_id: number): Promise<{articles: ArticleParsed[]}> {
 
-    const articleBookmark = await DB.ArticlesBookmarks.findAll({ attributes: ["article_id"], where: { user_id: user_id } });
+    const articleBookmark = await (await getDB()).ArticlesBookmarks.findAll({ attributes: ["article_id"], where: { user_id: user_id } });
 
     const articleIds = articleBookmark.map(articleBookmark => articleBookmark.article_id);
 
-    const articles = await DB.Articles.findAll({ 
+    const articles = await (await getDB()).Articles.findAll({ 
       where: { 
         pk: { [Op.in]: articleIds }
       }
@@ -492,8 +492,8 @@ export class ArticleService {
       throw new HttpException(false, 400, "Bookmark is empty");
     }
 
-    const likeCountPromises = articles.map(article => {
-      return DB.ArticlesLikes.count({
+    const likeCountPromises = articles.map(async article => {
+      return (await getDB()).ArticlesLikes.count({
         where: { article_id: article.pk }
       });
     });
@@ -504,8 +504,8 @@ export class ArticleService {
       article.likes = likeCounts[index];
     });
 
-    const commentCountPromises = articles.map(article => {
-      return DB.ArticlesComments.count({
+    const commentCountPromises = articles.map(async article => {
+      return (await getDB()).ArticlesComments.count({
         where: { article_id: article.pk }
       });
     });
@@ -522,15 +522,15 @@ export class ArticleService {
   }
 
   public async addView(article_id: string, user_id: number): Promise<boolean> {
-    const article = await DB.Articles.findOne({ attributes: ["pk"], where: { uuid: article_id } });
+    const article = await (await getDB()).Articles.findOne({ attributes: ["pk"], where: { uuid: article_id } });
     if (!article) {
       throw new HttpException(false, 400, "Article is not found");
     }
 
-    DB.ArticlesViews.create({ article_id: article.pk, user_id });
+    (await getDB()).ArticlesViews.create({ article_id: article.pk, user_id });
     const startDate = new Date("2023-01-01");
     const endDate = new Date("2023-12-31");
-    console.log(await DB.ArticlesViews.count({ 
+    console.log(await (await getDB()).ArticlesViews.count({ 
       where: {
         created_at: {
           [Op.and]: [
@@ -548,7 +548,7 @@ export class ArticleService {
     const { range } = query;
     const startDate = this.calculateStartDate(range);
   
-    const articleViews = await DB.ArticlesViews.findAll({
+    const articleViews = await (await getDB()).ArticlesViews.findAll({
       attributes: ['article_id'],
       where: {
         created_at: {
@@ -563,7 +563,7 @@ export class ArticleService {
   
     const articleIds = articleViews.map(articleView => articleView.article_id);
   
-    const articles = await DB.Articles.findAll({
+    const articles = await (await getDB()).Articles.findAll({
       where: {
         pk: { [Op.in]: articleIds }
       }
@@ -571,7 +571,7 @@ export class ArticleService {
   
     // Hitung berdasarkan date range untuk menentukan popularitas
     const likeCountPromises = articles.map(async (article) => {
-      const count = await DB.ArticlesLikes.count({
+      const count = await (await getDB()).ArticlesLikes.count({
         where: {
           article_id: article.pk,
           created_at: {
@@ -583,7 +583,7 @@ export class ArticleService {
     });
   
     const commentCountPromises = articles.map(async (article) => {
-      const count = await DB.ArticlesComments.count({
+      const count = await (await getDB()).ArticlesComments.count({
         where: {
           article_id: article.pk,
           created_at: {
@@ -595,7 +595,7 @@ export class ArticleService {
     });
   
     const viewCountPromises = articles.map(async (article) => {
-      const count = await DB.ArticlesViews.count({
+      const count = await (await getDB()).ArticlesViews.count({
         where: {
           article_id: article.pk,
           created_at: {
@@ -607,7 +607,7 @@ export class ArticleService {
     });
   
     const bookmarkCountPromises = articles.map(async (article) => {
-      const count = await DB.ArticlesBookmarks.count({
+      const count = await (await getDB()).ArticlesBookmarks.count({
         where: {
           article_id: article.pk,
           created_at: {
@@ -653,13 +653,13 @@ export class ArticleService {
     // Tampilkan jumlah views, likes, comments, dan bookmarks yang sesuai
     const totalLikePromises = sortedArticles.map(async (article) => {
       const articleId = article.uuid;
-      const articlePk = await DB.Articles.findOne({
+      const articlePk = await (await getDB()).Articles.findOne({
         attributes: ["pk"],
         where: {
           uuid: articleId,
         },
       });
-      return DB.ArticlesLikes.count({
+      return (await getDB()).ArticlesLikes.count({
         where: {
           article_id: articlePk.pk,
         },
@@ -668,13 +668,13 @@ export class ArticleService {
 
     const totalCommentPromises = sortedArticles.map(async (article) => {
       const articleId = article.uuid;
-      const articlePk = await DB.Articles.findOne({
+      const articlePk = await (await getDB()).Articles.findOne({
         attributes: ["pk"],
         where: {
           uuid: articleId,
         },
       });
-      return DB.ArticlesComments.count({
+      return (await getDB()).ArticlesComments.count({
         where: {
           article_id: articlePk.pk,
         },
@@ -683,13 +683,13 @@ export class ArticleService {
 
     const totalViewPromises = sortedArticles.map(async (article) => {
       const articleId = article.uuid;
-      const articlePk = await DB.Articles.findOne({
+      const articlePk = await (await getDB()).Articles.findOne({
         attributes: ["pk"],
         where: {
           uuid: articleId,
         },
       });
-      return DB.ArticlesViews.count({
+      return (await getDB()).ArticlesViews.count({
         where: {
           article_id: articlePk.pk,
         },
@@ -698,13 +698,13 @@ export class ArticleService {
 
     const totalBookmarkPromises = sortedArticles.map(async (article) => {
       const articleId = article.uuid;
-      const articlePk = await DB.Articles.findOne({
+      const articlePk = await (await getDB()).Articles.findOne({
         attributes: ["pk"],
         where: {
           uuid: articleId,
         },
       });
-      return DB.ArticlesBookmarks.count({
+      return (await getDB()).ArticlesBookmarks.count({
         where: {
           article_id: articlePk.pk,
         },

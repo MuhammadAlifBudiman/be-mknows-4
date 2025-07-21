@@ -24,9 +24,6 @@ export class UserRoute implements Routes {
       AuthMiddleware, AuthorizedRoles(["ADMIN"]), 
       this.user.getUsers
     );
-    this.router.get(`/v1/${this.path}/:id`, this.user.getUserById);
-    // this.router.post(`/v1/${this.path}`, ValidationMiddleware(CreateUserDto), this.user.createUser);
-    // this.router.put(`/v1/${this.path}/:id`, ValidationMiddleware(CreateUserDto, true), this.user.updateUser);
-    // this.router.delete(`/v1/${this.path}/:id`, this.user.deleteUser);
+    this.router.get(`/v1/${this.path}/:uuid`, this.user.getUserByUUID);
   }
 }

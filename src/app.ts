@@ -12,12 +12,11 @@ import fs from "fs";
 import path from "path";
 
 import { NODE_ENV, PORT, LOG_FORMAT, ORIGIN, CREDENTIALS } from "@config/index";
-import { DB } from "@database";
 import { Routes } from "@interfaces/routes.interface";
 import { ErrorMiddleware } from "@middlewares/error.middleware";
 import RateLimitter from "@middlewares/rate-limitter.middleware";
-
 import { logger, stream } from "@utils/logger";
+import { getDB } from "@/database/db-lazy";
 
 export class App {
   public app: express.Application;
@@ -25,25 +24,40 @@ export class App {
 
   private readonly env: string;
   private readonly port: string | number;
+  private _dbSynced: boolean = false; // Track if the DB has been synced
 
   constructor(routes: Routes[]) {
     this.app = express();
     this.env = NODE_ENV || "development";
     this.port = PORT || 3000;
 
-    // Ensure uploads directory exists at startup
-    const uploadsDir = path.join(process.cwd(), "uploads");
-    if (!fs.existsSync(uploadsDir)) {
-      fs.mkdirSync(uploadsDir, { recursive: true });
-    }
-
-    // Wait for DB to be ready before continuing
-    this.initialize().then(() => {
-      this.initializeRateLimitter();
-      this.initializeMiddlewares();
-      this.initializeRoutes(routes);
-      this.initializeErrorHandling();
+    // Add DB initialization middleware
+    this.app.use(async (req, res, next) => {
+      try {
+        const db = await getDB();
+        // In development or test, drop and recreate all tables on first request
+        if (this.env === 'development' || this.env === 'test') {
+          if (!this._dbSynced) {
+            await db.sequelize.sync({ alter: true, force: true });
+            logger.info('Database synced with force: true (all tables dropped and recreated)');
+            // Run the role seeder after syncing
+            const roleSeeder = require('./database/seeders/01-insert-role.js');
+            await roleSeeder.up(db.sequelize.getQueryInterface(), db.sequelize.constructor);
+            logger.info('Role seeder executed');
+            this._dbSynced = true;
+          }
+        }
+        next();
+      } catch (err) {
+        logger.error("DB initialization failed: " + err.message);
+        res.status(500).json({ message: "Database initialization failed" });
+      }
     });
+
+    this.initializeRateLimitter();
+    this.initializeMiddlewares();
+    this.initializeRoutes(routes);
+    this.initializeErrorHandling();
   }
 
   public listen() {
@@ -56,50 +70,6 @@ export class App {
 
   public getServer() {
     return this.app;
-  }
-
-  private async connectToDatabase() {
-    // Dynamically require 'pg' to avoid issues if not installed in production
-    const { Client } = require('pg');
-    const { DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_DATABASE } = process.env;
-
-    // Connect to the default 'postgres' database
-    const client = new Client({
-      host: DB_HOST,
-      port: DB_PORT ? Number(DB_PORT) : undefined,
-      user: DB_USER,
-      password: DB_PASSWORD,
-      database: 'postgres',
-    });
-
-    try {
-      await client.connect();
-      // Check if the target database exists
-      const res = await client.query(
-        'SELECT 1 FROM pg_database WHERE datname = $1',
-        [DB_DATABASE]
-      );
-      if (res.rowCount === 0) {
-        // Database does not exist, create it
-        await client.query(`CREATE DATABASE "${DB_DATABASE}"`);
-        logger.info(`Database '${DB_DATABASE}' created successfully.`);
-      } else {
-        logger.info(`Database '${DB_DATABASE}' already exists.`);
-      }
-    } catch (err: any) {
-      logger.error('Error checking/creating database: ' + err.message);
-      process.exit(1);
-    } finally {
-      await client.end();
-    }
-  }
-
-  private async initialize() {
-    // Wait for DB to be ready and sync models
-    while (!DB || !DB.sequelize) {
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
-    await DB.sequelize.sync({ alter: true, force: false });
   }
 
   private initializeMiddlewares() {

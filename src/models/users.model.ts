@@ -6,19 +6,11 @@ import { UserRole } from '@interfaces/authentication/user-role.interface';
 
 export type UserCreationAttributes = Optional<User, "pk" | "uuid" | "full_name" | "display_picture">;
 export class UserModel extends Model<User, UserCreationAttributes> implements User {
-  public pk: number;
-  public uuid: string;
 
-  public full_name: string;
-  public display_picture: number;
-  public email: string;
-  public password: string;
-  public email_verified_at: Date;
-
-  public readonly created_at!: Date;
-  public readonly updated_at!: Date;
-  public readonly deleted_at: Date;
 }
+
+// Declaration merging: this tells TypeScript that UserModel instances have User properties
+export interface UserModel extends User {}
 
 export default function (sequelize: Sequelize): typeof UserModel {
   UserModel.init(
@@ -39,12 +31,6 @@ export default function (sequelize: Sequelize): typeof UserModel {
       display_picture: {
         type: DataTypes.INTEGER,
         allowNull: true,
-        // references: {
-        //   model: FileModel,
-        //   key: "pk",
-        // },
-        // onDelete: "CASCADE",
-        // onUpdate: "CASCADE",
       },
       email: {
         allowNull: false,

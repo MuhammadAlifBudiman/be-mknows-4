@@ -33,7 +33,7 @@ function _define_property(obj, key, value) {
 }
 let UserSessionModel = class UserSessionModel extends _sequelize.Model {
     constructor(...args){
-        super(...args), _define_property(this, "pk", void 0), _define_property(this, "uuid", void 0), _define_property(this, "user_id", void 0), _define_property(this, "useragent", void 0), _define_property(this, "ip_address", void 0), _define_property(this, "status", void 0), _define_property(this, "user", void 0), _define_property(this, "created_at", void 0), _define_property(this, "updated_at", void 0), _define_property(this, "deleted_at", void 0);
+        super(...args), _define_property(this, "uuid", void 0);
     }
 };
 function _default(sequelize) {

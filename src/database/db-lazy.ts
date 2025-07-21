@@ -19,20 +19,27 @@ import CommentReplyLikeModel from "@/models/articles_replies_like.model";
 import ArticleBookmarkModel from "@/models/articles_bookmark.model";
 import ArticleViewModel from "@/models/articles_views.model";
 
-const dbConfig = config[NODE_ENV] || config["development"];
+let DB: any = null;
+let initializing = false;
+let initialized = false;
 
-// Ensure DB exists before initializing Sequelize
-let DB: any;
+export async function getDB() {
+  if (initialized) return DB;
+  if (initializing) {
+    while (!initialized) {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+    return DB;
+  }
+  initializing = true;
 
-(async () => {
-
+  const dbConfig = config[NODE_ENV] || config["development"];
   const sequelize = new Sequelize(
     dbConfig.database as string,
     dbConfig.username as string,
     dbConfig.password,
     dbConfig
   );
-
   await sequelize.authenticate();
   logger.info(`=> Database Connected on ${NODE_ENV}`);
 
@@ -56,6 +63,6 @@ let DB: any;
     sequelize, // connection instance (RAW queries)
     Sequelize, // library
   };
-})();
-
-export { DB };
+  initialized = true;
+  return DB;
+}

@@ -1,18 +1,29 @@
 import { Service } from "typedi";
-import { DB } from "@database";
+import { getDB } from "@/database/db-lazy";
 
 import { File } from "@interfaces/file.interface";
 import { HttpException } from "@/exceptions/HttpException";
+import { NODE_ENV } from "@config/index";
 
 @Service()
 export class FileService {
   public async uploadSingleFile(user_id: number, file: Express.Multer.File): Promise<File> {
-    const fileUpload = await DB.Files.create({
+    const DB = await getDB();
+    const isProduction = NODE_ENV === 'production';
+    const fileUrl = isProduction
+      ? (file as any).location || null
+      : `/uploads/${file.filename}`;
+    const fileName = isProduction ? file.originalname : file.filename;
+
+    const fileData = {
       user_id,
-      name: file.filename,
+      name: fileName,
       type: file.mimetype,
-      size: file.size
-    });
+      size: file.size,
+      url: fileUrl,
+    };
+
+    const fileUpload = await DB.Files.create(fileData);
 
     delete fileUpload.dataValues.pk;
     delete fileUpload.dataValues.name;
@@ -22,8 +33,9 @@ export class FileService {
   };
   
   public async getFileWithUUID(file_uuid: string): Promise<File> {
+    const DB = await getDB();
     const file = await DB.Files.findOne({
-      attributes: ["name"],
+      attributes: ["name", "url"],
       where: {
         uuid: file_uuid
       }
@@ -34,6 +46,7 @@ export class FileService {
   };
 
   public async getUserFiles(user_id: number): Promise<File[]> {
+    const DB = await getDB();
     const files = await DB.Files.findAll({
       attributes: { exclude: ["pk", "user_id", "name"] },
       where: {

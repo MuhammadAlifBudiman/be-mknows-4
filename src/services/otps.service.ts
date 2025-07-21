@@ -1,6 +1,6 @@
 import { Service } from "typedi";
 import { Transaction } from "sequelize";
-import { DB } from "@database";
+import { getDB } from "@/database/db-lazy";
 
 import { OTP } from "@interfaces/otp.interface";
 import { HttpException } from "@exceptions/HttpException";
@@ -13,7 +13,7 @@ export class OTPService {
     const currentDateTime = new Date();
     const expirationTime = new Date(currentDateTime.getTime() + validInMinutes * 60000);
   
-    const otp = await DB.OTPs.create({
+    const otp = await (await getDB()).OTPs.create({
       user_id: data.user_id,
       key,
       type: data.type,
@@ -25,7 +25,7 @@ export class OTPService {
   }
 
   public async findOTP(data: { user_id: number, key: string, type: string }): Promise<boolean> {
-    const otp = await DB.OTPs.findOne({
+    const otp = await (await getDB()).OTPs.findOne({
       where: {
         user_id: data.user_id,
         key: data.key,

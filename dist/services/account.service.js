@@ -9,7 +9,7 @@ Object.defineProperty(exports, "AccountService", {
     }
 });
 const _typedi = require("typedi");
-const _database = require("../database");
+const _dblazy = require("../database/db-lazy");
 const _HttpException = require("../exceptions/HttpException");
 function _define_property(obj, key, value) {
     if (key in obj) {
@@ -71,7 +71,8 @@ function _ts_decorate(decorators, target, key, desc) {
 }
 let AccountService = class AccountService {
     async getProfileByUserId(user_id) {
-        const user = await _database.DB.Users.findOne({
+        const DB = await (0, _dblazy.getDB)();
+        const user = await DB.Users.findOne({
             attributes: {
                 exclude: [
                     "pk"
@@ -81,7 +82,7 @@ let AccountService = class AccountService {
                 pk: user_id
             }
         });
-        const file = await _database.DB.Files.findOne({
+        const file = await DB.Files.findOne({
             where: {
                 pk: user.display_picture
             }
@@ -92,7 +93,8 @@ let AccountService = class AccountService {
         return response;
     }
     async getSessionsHistoriesByUserId(user_id, session_id) {
-        const userSessions = await _database.DB.UsersSessions.findAll({
+        const DB = await (0, _dblazy.getDB)();
+        const userSessions = await DB.UsersSessions.findAll({
             attributes: {
                 exclude: [
                     "pk",
@@ -110,10 +112,11 @@ let AccountService = class AccountService {
         return userSessionsParsed;
     }
     async updateUserProfile(user_id, data) {
+        const DB = await (0, _dblazy.getDB)();
         const updatedData = {};
         if (data.full_name) updatedData.full_name = data.full_name;
         if (data.display_picture) {
-            const file = await _database.DB.Files.findOne({
+            const file = await DB.Files.findOne({
                 attributes: [
                     "pk"
                 ],
@@ -130,7 +133,7 @@ let AccountService = class AccountService {
         if (Object.keys(updatedData).length === 0) {
             throw new _HttpException.HttpException(false, 400, "Some field is required");
         }
-        const [_, [user]] = await _database.DB.Users.update(updatedData, {
+        const [_, [user]] = await DB.Users.update(updatedData, {
             where: {
                 pk: user_id
             },
@@ -138,7 +141,7 @@ let AccountService = class AccountService {
         });
         delete user.dataValues.pk;
         delete user.dataValues.password;
-        const file = await _database.DB.Files.findOne({
+        const file = await DB.Files.findOne({
             where: {
                 pk: user.display_picture
             }

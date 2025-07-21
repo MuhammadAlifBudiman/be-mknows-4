@@ -40,7 +40,14 @@ module.exports = {
             deletedAt: "deleted_at"
         },
         logging: false,
-        benchmark: false
+        benchmark: false,
+        ssl: true,
+        dialectOptions: {
+            ssl: {
+                require: true,
+                rejectUnauthorized: false
+            }
+        }
     }
 };
 

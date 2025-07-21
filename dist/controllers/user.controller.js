@@ -36,19 +36,16 @@ let UserController = class UserController {
         _define_property(this, "user", _typedi.Container.get(_usersservice.UserService));
         _define_property(this, "getUseragent", (0, _expressasynchandler.default)(async (req, res, next)=>{
             const userAgentPayload = (0, _userAgent.getUserAgent)(req);
-            res.status(200).json((0, _apiResponse.apiResponse)(200, "OK", "All Users Retrieved", userAgentPayload));
+            res.status(200).json((0, _apiResponse.apiResponse)(200, "OK", "User Agent Retrieved", userAgentPayload));
         }));
         _define_property(this, "getUsers", (0, _expressasynchandler.default)(async (req, res, next)=>{
             const findAllUsersData = await this.user.findAllUser();
             res.status(200).json((0, _apiResponse.apiResponse)(200, "OK", "All Users Retrieved", findAllUsersData));
         }));
-        _define_property(this, "getUserById", (0, _expressasynchandler.default)(async (req, res, next)=>{
-            const userId = Number(req.params.id);
-            const findOneUserData = await this.user.findUserById(userId);
-            res.status(200).json({
-                data: findOneUserData,
-                message: "findOne"
-            });
+        _define_property(this, "getUserByUUID", (0, _expressasynchandler.default)(async (req, res, next)=>{
+            const user_uuid = req.params.uuid;
+            const findOneUserData = await this.user.findUserByUUID(user_uuid);
+            res.status(200).json((0, _apiResponse.apiResponse)(200, "OK", "User Retrieved", findOneUserData));
         }));
     }
 };

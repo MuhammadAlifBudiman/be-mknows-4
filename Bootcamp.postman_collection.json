@@ -1,0 +1,2335 @@
+{
+	"info": {
+		"_postman_id": "d8fa17df-c9e5-4a3f-9725-be9b14f6dcb3",
+		"name": "Bootcamp",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "24748798"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Register",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const timestamp = Date.now();",
+									"pm.environment.set(\"email\", `user-${timestamp}@gmail.com`);",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// === Configuration ===",
+									"const responseData = pm.response.json();",
+									"const email = responseData?.data?.email",
+									"const { uuid } = responseData?.data || {};",
+									"const { otp } = responseData?.data || {};",
+									"",
+									"// === Tests ===",
+									"utils.setPm(pm);",
+									"utils.expectStatus(201);",
+									"utils.expectContentTypeJSON();",
+									"utils.expectStandardResponseStructure(responseData);",
+									"utils.expectFieldsExistNotEmpty(responseData.data, [\"email\", \"uuid\"]);",
+									"utils.setEnv(\"USER_UUID\", uuid);",
+									"utils.setEnv(\"OTP\", otp);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"{{email}}\",\r\n    \"password\": \"{{password}}\",\r\n    \"full_name\": \"{{full_name}}\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/{{VERSION}}/auth/register",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"{{VERSION}}",
+								"auth",
+								"register"
+							]
+						},
+						"description": "### Auth Register\n\nThis API endpoint is used to register a new user. When making a POST request to /auth/register, the user needs to provide the email, password, and full name in the request body. The response will include a status code of 201 and a JSON object with a code, status, message, and data containing the UUID and email of the registered user.\n\n### Request Body\n\n- email (text, required): The email of the user to be registered.\n- password (text, required): The password for the user account.\n- full_name (text, required): The full name of the user.\n    \n\n### Response\n\n- code (number): The status code of the response.\n- status (string): The status of the response.\n- message (string): Any additional message related to the response.\n- data (object): An object containing the UUID and email of the registered user.\n    \n\nExample:\n\n``` json\n{\n    \"code\": 0,\n    \"status\": \"\",\n    \"message\": \"\",\n    \"data\": {\n        \"uuid\": \"\",\n        \"email\": \"\"\n    }\n}\n\n ```"
+					},
+					"response": []
+				},
+				{
+					"name": "Assign Role (dev)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// === Config ===",
+									"const responseData = pm.response.json();",
+									"const datafield = responseData?.data;",
+									"const userRole = responseData?.data?.user_role;",
+									"const role = pm.variables.get(\"role\");  // uses resolved `{{role}}` value",
+									"",
+									"// === Tests ===",
+									"utils.expectStatus(200);",
+									"utils.expectContentTypeJSON();",
+									"utils.expectStandardResponseStructure(responseData);",
+									"utils.expectNonEmptyField(datafield, \"user_role\");",
+									"utils.expectExactFieldValue(userRole, role);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"role\": \"{{role}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/{{VERSION}}/auth/{{USER_UUID}}/assign-role",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"{{VERSION}}",
+								"auth",
+								"{{USER_UUID}}",
+								"assign-role"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Verifikasi Email",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// === Configuration ===",
+									"const responseData = pm.response.json();",
+									"",
+									"// === Tests ===",
+									"utils.expectStatus(200);",
+									"utils.expectContentTypeJSON();",
+									"utils.expectStandardResponseStructure(responseData);",
+									"utils.expectEmptyDataObject(responseData.data);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"uuid\": \"{{USER_UUID}}\",\r\n    \"otp\": \"{{OTP}}\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/{{VERSION}}/auth/verify",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"{{VERSION}}",
+								"auth",
+								"verify"
+							]
+						},
+						"description": "This endpoint is used to verify the user's identity by sending a POST request to the specified URL and version. The request should include a payload with the user's UUID and OTP.\n\n### Request Body\n\n- `uuid` (string): The unique identifier for the user.\n- `otp` (string): The one-time password for verification.\n    \n\n### Response\n\nUpon successful execution, the server will respond with a status code of 200 and a JSON object containing the following fields:\n\n- `code` (integer): The status code for the response.\n- `status` (string): The status message.\n- `message` (string): Additional information regarding the response.\n- `data` (object): An empty object."
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// === Configuration ===",
+									"const responseData = pm.response.json();",
+									"const datafield = responseData?.data;",
+									"const token = responseData?.data?.access_token;",
+									"",
+									"// === Tests ===",
+									"utils.setPm(pm);",
+									"utils.expectStatus(200);",
+									"utils.expectContentTypeJSON();",
+									"utils.expectStandardResponseStructure(responseData);",
+									"utils.expectNonEmptyField(datafield, \"access_token\");",
+									"utils.setEnv(\"TOKEN\", token);",
+									"",
+									"if (pm.response.code === 200) {",
+									"    pm.execution.setNextRequest(\"Lihat Useragent\");",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"{{email}}\",\r\n    \"password\": \"{{password}}\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/{{VERSION}}/auth/login",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"{{VERSION}}",
+								"auth",
+								"login"
+							]
+						},
+						"description": "### Auth Login\n\nThis endpoint is used to authenticate a user and obtain an access token.\n\n#### Request Body\n\n- email (text, required): The email address of the user.\n- password (text, required): The password of the user.\n    \n\nExample:\n\n``` json\n{\n  \"email\": \"user@email.com\",\n  \"password\": \"password\"\n}\n\n ```\n\n#### Response\n\n- Status: 200\n- Content-Type: application/json\n    \n\nExample:\n\n``` json\n{\n  \"code\": 0,\n  \"status\": \"\",\n  \"message\": \"\",\n  \"data\": {\n    \"access_token\": \"\"\n  }\n}\n\n ```"
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// === Config ===",
+									"const responseData = pm.response.json();",
+									"",
+									"// === Tests ===",
+									"utils.expectStatus(200);",
+									"utils.expectContentTypeJSON();",
+									"utils.expectStandardResponseStructure(responseData);",
+									"utils.expectEmptyDataObject(responseData.data);",
+									"",
+									"pm.execution.setNextRequest(null);",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"{{email}}\",\r\n    \"password\": \"{{password}}\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/{{VERSION}}/auth/logout",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"{{VERSION}}",
+								"auth",
+								"logout"
+							]
+						},
+						"description": "### Auth Logout\n\nThis endpoint is used to log out a user by invalidating their authentication token.\n\n### Request Body\n\n- email (text, required): The email address of the user.\n- password (text, required): The password of the user.\n    \n\n### Response\n\n- Status: 200\n- Content-Type: application/json\n- code (number): The status code of the response.\n- status (string): The status of the response.\n- message (string): Any additional message related to the response.\n- data (object): An empty object indicating successful logout."
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "User",
+			"item": [
+				{
+					"name": "Lihat Useragent",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// === Config ===",
+									"const responseData = pm.response.json();",
+									"const dataFields = [\"browser\", \"version\", \"os\", \"platform\", \"ip_address\", \"source\"];",
+									"",
+									"// === Tests ===",
+									"utils.expectStatus(200);",
+									"utils.expectContentTypeJSON();",
+									"utils.expectStandardResponseStructure(responseData);",
+									"utils.expectFieldsExistNotEmpty(responseData.data, dataFields);",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/{{VERSION}}/users/check",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"{{VERSION}}",
+								"users",
+								"check"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Lihat Pengguna",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// === Config ===",
+									"const role = pm.variables.get(\"role\"); ",
+									"const responseData = pm.response.json();",
+									"const dataFields = [\"pk\", \"uuid\", \"full_name\", \"display_picture\", \"email\", \"email_verified_at\", \"created_at\", \"updated_at\", \"deleted_at\"];",
+									"",
+									"// === Tests ===",
+									"if (role === \"ADMIN\"){",
+									"    utils.expectStatus(200);",
+									"    utils.expectContentTypeJSON();",
+									"    utils.expectStandardResponseStructure(responseData);",
+									"    utils.expectFieldsExist(responseData.data[0], dataFields);",
+									"    utils.expectArrayWithMinLength(responseData.data, 1, \"data\");",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/{{VERSION}}/users",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"{{VERSION}}",
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Lihat Pengguna dengan UUID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// === Config ===",
+									"const responseData = pm.response.json();",
+									"const dataFields = [\"pk\", \"uuid\", \"full_name\", \"display_picture\", \"email\", \"email_verified_at\", \"created_at\", \"updated_at\", \"deleted_at\"];",
+									"",
+									"// === Tests ===",
+									"utils.expectStatus(200);",
+									"utils.expectContentTypeJSON();",
+									"utils.expectStandardResponseStructure(responseData);",
+									"utils.expectFieldsExist(responseData.data, dataFields);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/{{VERSION}}/users/{{USER_UUID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"{{VERSION}}",
+								"users",
+								"{{USER_UUID}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Akun",
+			"item": [
+				{
+					"name": "Profil",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// === Config ===",
+									"const responseData = pm.response.json();",
+									"const dataFields = [\"uuid\", \"full_name\", \"display_picture\", \"email\", \"email_verified_at\", \"created_at\", \"updated_at\", \"deleted_at\"];",
+									"",
+									"// === Tests ===",
+									"utils.expectStatus(200);",
+									"utils.expectContentTypeJSON();",
+									"utils.expectStandardResponseStructure(responseData);",
+									"utils.expectFieldsExist(responseData.data, dataFields);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/{{VERSION}}/account/profile/me",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"{{VERSION}}",
+								"account",
+								"profile",
+								"me"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Sesi",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// === Config ===",
+									"const role = pm.variables.get(\"role\"); ",
+									"const responseData = pm.response.json();",
+									"const dataFields = [\"uuid\", \"useragent\", \"ip_address\", \"status\", \"created_at\", \"updated_at\", \"deleted_at\", \"is_current\"];",
+									"",
+									"// === Tests ===",
+									"utils.expectStatus(200);",
+									"utils.expectContentTypeJSON();",
+									"utils.expectStandardResponseStructure(responseData);",
+									"utils.expectFieldsExist(responseData.data[0], dataFields);",
+									"utils.expectArrayWithMinLength(responseData.data, 1, \"data\");"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/{{VERSION}}/account/sessions/me",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"{{VERSION}}",
+								"account",
+								"sessions",
+								"me"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Ubah Profil",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// === Config ===",
+									"const responseData = pm.response.json();",
+									"const dataFields = [\"uuid\", \"full_name\", \"display_picture\", \"email\", \"email_verified_at\", \"created_at\", \"updated_at\", \"deleted_at\"];",
+									"",
+									"// === Tests ===",
+									"utils.expectStatus(200);",
+									"utils.expectContentTypeJSON();",
+									"utils.expectStandardResponseStructure(responseData);",
+									"utils.expectFieldsExist(responseData.data, dataFields);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"full_name\": \"New Name\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/{{VERSION}}/account/profile/me",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"{{VERSION}}",
+								"account",
+								"profile",
+								"me"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "File",
+			"item": [
+				{
+					"name": "Unggah File",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// === Config ===",
+									"const responseData = pm.response.json();",
+									"const dataFields = [\"uuid\", \"type\", \"size\", \"url\", \"created_at\", \"updated_at\", \"deleted_at\"];",
+									"const { uuid } = responseData?.data || {};",
+									"",
+									"// === Tests ===",
+									"utils.setPm(pm);",
+									"utils.expectStatus(201);",
+									"utils.expectContentTypeJSON();",
+									"utils.expectStandardResponseStructure(responseData);",
+									"utils.expectFieldsExist(responseData.data, dataFields);",
+									"utils.setEnv(\"FILE_UUID\", uuid);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": [
+										"postman-cloud:///1f045ca2-501f-4140-beba-f7c62bd65d56",
+										"/home/alif/00_Inbox/995-1200x400.jpg"
+									]
+								}
+							]
+						},
+						"url": {
+							"raw": "{{URL}}/{{VERSION}}/files/upload",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"{{VERSION}}",
+								"files",
+								"upload"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Lihat File",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// === Tests ===",
+									"utils.expectStatus(200);",
+									"utils.expectContentType(\"image/jpeg\");"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/{{VERSION}}/files/{{FILE_UUID}}/preview",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"{{VERSION}}",
+								"files",
+								"{{FILE_UUID}}",
+								"preview"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Lihat File Saya",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// === Config ===",
+									"const responseData = pm.response.json();",
+									"const dataFields = [\"uuid\", \"type\", \"size\", \"url\", \"created_at\", \"updated_at\", \"deleted_at\"];",
+									"",
+									"// === Tests ===",
+									"utils.expectStatus(200);",
+									"utils.expectContentTypeJSON();",
+									"utils.expectStandardResponseStructure(responseData);",
+									"utils.expectFieldsExist(responseData.data[0], dataFields);",
+									"utils.expectArrayWithMinLength(responseData.data, 1, \"data\");"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/{{VERSION}}/files/mine",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"{{VERSION}}",
+								"files",
+								"mine"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Kategori",
+			"item": [
+				{
+					"name": "Buat Kategori",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// === Config ===",
+									"const responseData = pm.response.json();",
+									"const dataFields = [\"uuid\", \"name\", \"description\", \"created_at\", \"updated_at\", \"deleted_at\"];",
+									"const { uuid } = responseData?.data || {};",
+									"",
+									"// === Tests ===",
+									"utils.setPm(pm);",
+									"utils.expectStatus(201);",
+									"utils.expectContentTypeJSON();",
+									"utils.expectStandardResponseStructure(responseData);",
+									"utils.expectFieldsExist(responseData.data, dataFields);",
+									"utils.setEnv(\"CATEGORY_UUID\", uuid);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"Kesehatan\",\r\n    \"description\": \"Kesehatan adalah kunci untuk membuka pintu kesempatan dan mengembangkan potensi individu, mendorong pertumbuhan intelektual, sosial, dan pribadi.\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/{{VERSION}}/categories",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"{{VERSION}}",
+								"categories"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Semua Kategori",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// === Config ===",
+									"const responseData = pm.response.json();",
+									"const dataFields = [\"uuid\", \"name\", \"description\", \"created_at\", \"updated_at\", \"deleted_at\"];",
+									"",
+									"// === Tests ===",
+									"utils.expectStatus(200);",
+									"utils.expectContentTypeJSON();",
+									"utils.expectStandardResponseStructure(responseData);",
+									"utils.expectFieldsExist(responseData.data[0], dataFields);",
+									"utils.expectArrayWithMinLength(responseData.data, 1, \"data\");"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/{{VERSION}}/categories",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"{{VERSION}}",
+								"categories"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Ubah Kategori",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// === Config ===",
+									"const responseData = pm.response.json();",
+									"const dataFields = [\"uuid\", \"name\", \"description\", \"created_at\", \"updated_at\", \"deleted_at\"];",
+									"",
+									"// === Tests ===",
+									"utils.expectStatus(200);",
+									"utils.expectContentTypeJSON();",
+									"utils.expectStandardResponseStructure(responseData);",
+									"utils.expectFieldsExist(responseData.data, dataFields);",
+									"",
+									"if (pm.response.code === 200) {",
+									"    pm.execution.setNextRequest(\"Buat Artikel\");",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"Kategori Baru\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/{{VERSION}}/categories/{{CATEGORY_UUID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"{{VERSION}}",
+								"categories",
+								"{{CATEGORY_UUID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Hapus Kategori",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// === Config ===",
+									"const responseData = pm.response.json();",
+									"",
+									"// === Tests ===",
+									"utils.expectStatus(200);",
+									"utils.expectContentTypeJSON();",
+									"utils.expectStandardResponseStructure(responseData);",
+									"utils.expectEmptyDataObject(responseData.data);",
+									"",
+									"if (pm.response.code === 200) {",
+									"    pm.execution.setNextRequest(\"Logout\");",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/{{VERSION}}/categories/{{CATEGORY_UUID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"{{VERSION}}",
+								"categories",
+								"{{CATEGORY_UUID}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Artikel",
+			"item": [
+				{
+					"name": "Buat Artikel",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// === Config ===",
+									"const responseData = pm.response.json();",
+									"const dataFields = [\"uuid\", \"title\", \"description\", \"content\", \"thumbnail\", \"author\", \"categories\", \"views\", \"likes\", \"comments\", \"bookmarks\"];",
+									"const { uuid } = responseData?.data || {};",
+									"",
+									"// === Tests ===",
+									"utils.setPm(pm);",
+									"utils.expectStatus(201);",
+									"utils.expectContentTypeJSON();",
+									"utils.expectStandardResponseStructure(responseData);",
+									"utils.expectFieldsExist(responseData.data, dataFields);",
+									"utils.setEnv(\"ARTICLE_UUID\", uuid);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"title\": \"Membangun Backend yang Kokoh: Jantung Aplikasi Anda\",\r\n    \"description\": \"Backend yang dirancang dengan baik adalah pilar tak terlihat dalam aplikasi perangkat lunak Anda, yang dengan diam-diam menggerakkan segalanya mulai dari basis data hingga otentikasi pengguna\",\r\n    \"content\": \"Sebuah backend yang handal memungkinkan aplikasi Anda berjalan dengan mulus. Ini adalah tempat di mana data disimpan dan diolah, dan pengguna diotentikasi. Sebagai otak aplikasi, backend memainkan peran penting dalam keberhasilan keseluruhan proyek. Dalam artikel ini, kami akan membahas komponen utama backend, termasuk server, basis data, dan keamanan. Anda akan memahami bagaimana merancang dan memelihara backend yang kuat untuk aplikasi Anda. Dengan pengenalan yang kuat ini, Anda akan siap untuk merancang dan mengembangkan aplikasi yang tangguh.\",\r\n    \"thumbnail\": \"{{FILE_UUID}}\",\r\n    \"categories\": [\"{{CATEGORY_UUID}}\"]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/{{VERSION}}/articles",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"{{VERSION}}",
+								"articles"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Semua Artikel",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// === Config ===",
+									"const responseData = pm.response.json();",
+									"const dataFields = [\"uuid\", \"title\", \"description\", \"content\", \"thumbnail\", \"author\", \"categories\", \"views\", \"likes\", \"comments\", \"bookmarks\"];",
+									"",
+									"// === Tests ===",
+									"utils.expectStatus(200);",
+									"utils.expectContentTypeJSON();",
+									"utils.expectStandardResponseStructure(responseData);",
+									"utils.expectFieldsExist(responseData.data[0], dataFields);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/{{VERSION}}/articles",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"{{VERSION}}",
+								"articles"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Lihat Artikel dengan Kategori",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// === Config ===",
+									"const responseData = pm.response.json();",
+									"const dataFields = [\"uuid\", \"title\", \"description\", \"content\", \"thumbnail\", \"author\", \"categories\", \"views\", \"likes\", \"comments\", \"bookmarks\"];",
+									"",
+									"// === Tests ===",
+									"utils.expectStatus(200);",
+									"utils.expectContentTypeJSON();",
+									"utils.expectStandardResponseStructure(responseData);",
+									"utils.expectFieldsExist(responseData.data[0], dataFields);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/{{VERSION}}/articles/categories/{{CATEGORY_UUID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"{{VERSION}}",
+								"articles",
+								"categories",
+								"{{CATEGORY_UUID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Ubah Artikel",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// === Config ===",
+									"const responseData = pm.response.json();",
+									"const dataFields = [\"uuid\", \"title\", \"description\", \"content\", \"thumbnail\", \"author\", \"categories\", \"views\", \"likes\", \"comments\", \"bookmarks\"];",
+									"",
+									"// === Tests ===",
+									"utils.expectStatus(200);",
+									"utils.expectContentTypeJSON();",
+									"utils.expectStandardResponseStructure(responseData);",
+									"utils.expectFieldsExist(responseData.data, dataFields);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"title\": \"Hendra Kangen\",\r\n    \"categories\": [\"{{CATEGORY_UUID}}\"]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/{{VERSION}}/articles/{{ARTICLE_UUID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"{{VERSION}}",
+								"articles",
+								"{{ARTICLE_UUID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Bookmark Artikel",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// === Config ===",
+									"const responseData = pm.response.json();",
+									"const dataFields = [\"article_id\", \"is_bookmarked\", \"bookmarks\"];",
+									"",
+									"// === Tests ===",
+									"utils.expectStatus(200);",
+									"utils.expectContentTypeJSON();",
+									"utils.expectStandardResponseStructure(responseData);",
+									"utils.expectFieldsExist(responseData.data, dataFields);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/{{VERSION}}/articles/{{ARTICLE_UUID}}/bookmark",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"{{VERSION}}",
+								"articles",
+								"{{ARTICLE_UUID}}",
+								"bookmark"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Lihat Bookmark Saya",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// === Config ===",
+									"const responseData = pm.response.json();",
+									"const dataFields = [\"uuid\", \"title\", \"description\", \"content\", \"thumbnail\", \"author\", \"categories\", \"views\", \"likes\", \"comments\", \"bookmarks\"];",
+									"",
+									"// === Tests ===",
+									"utils.expectStatus(200);",
+									"utils.expectContentTypeJSON();",
+									"utils.expectStandardResponseStructure(responseData);",
+									"utils.expectFieldsExist(responseData.data[0], dataFields);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/{{VERSION}}/articles/bookmark/me",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"{{VERSION}}",
+								"articles",
+								"bookmark",
+								"me"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Suka / Batal Suka Artikel",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// === Config ===",
+									"const responseData = pm.response.json();",
+									"const dataFields = [\"article_id\", \"is_liked\", \"likes\"];",
+									"",
+									"// === Tests ===",
+									"utils.expectStatus(200);",
+									"utils.expectContentTypeJSON();",
+									"utils.expectStandardResponseStructure(responseData);",
+									"utils.expectFieldsExist(responseData.data, dataFields);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/{{VERSION}}/articles/{{ARTICLE_UUID}}/like",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"{{VERSION}}",
+								"articles",
+								"{{ARTICLE_UUID}}",
+								"like"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Lihat Artikel berdasarkan ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// === Config ===",
+									"const responseData = pm.response.json();",
+									"const dataFields = [\"uuid\", \"title\", \"description\", \"content\", \"thumbnail\", \"author\", \"categories\", \"views\", \"likes\", \"comments\", \"bookmarks\"];",
+									"",
+									"// === Tests ===",
+									"utils.expectStatus(200);",
+									"utils.expectContentTypeJSON();",
+									"utils.expectStandardResponseStructure(responseData);",
+									"utils.expectFieldsExist(responseData.data, dataFields);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/{{VERSION}}/articles/{{ARTICLE_UUID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"{{VERSION}}",
+								"articles",
+								"{{ARTICLE_UUID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Lihat Artikel Populer",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// === Config ===",
+									"const responseData = pm.response.json();",
+									"const dataFields = [\"uuid\", \"title\", \"description\", \"content\", \"thumbnail\", \"author\", \"categories\", \"views\", \"likes\", \"comments\", \"bookmarks\"];",
+									"",
+									"// === Tests ===",
+									"utils.expectStatus(200);",
+									"utils.expectContentTypeJSON();",
+									"utils.expectStandardResponseStructure(responseData);",
+									"utils.expectFieldsExist(responseData.data[0], dataFields);",
+									"",
+									"if (pm.response.code === 200) {",
+									"    pm.execution.setNextRequest(\"Buat Komen\");",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/{{VERSION}}/articles/popular?range=3 days",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"{{VERSION}}",
+								"articles",
+								"popular"
+							],
+							"query": [
+								{
+									"key": "range",
+									"value": "3 days"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Hapus Artikel",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// === Config ===",
+									"const responseData = pm.response.json();",
+									"",
+									"// === Tests ===",
+									"utils.expectStatus(200);",
+									"utils.expectContentTypeJSON();",
+									"utils.expectStandardResponseStructure(responseData);",
+									"utils.expectEmptyDataObject(responseData.data);",
+									"",
+									"if (pm.response.code === 200) {",
+									"    pm.execution.setNextRequest(\"Hapus Kategori\");",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"title\": \"Backend Testing\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/{{VERSION}}/articles/{{ARTICLE_UUID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"{{VERSION}}",
+								"articles",
+								"{{ARTICLE_UUID}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Komen",
+			"item": [
+				{
+					"name": "Buat Komen",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// === Config ===",
+									"const responseData = pm.response.json();",
+									"const dataFields = [\"uuid\", \"comment\", \"article\", \"author\", \"likes\", \"replies\"];",
+									"const { uuid } = responseData?.data || {};",
+									"",
+									"// === Tests ===",
+									"utils.setPm(pm);",
+									"utils.expectStatus(201);",
+									"utils.expectContentTypeJSON();",
+									"utils.expectStandardResponseStructure(responseData);",
+									"utils.expectFieldsExist(responseData.data, dataFields);",
+									"utils.setEnv(\"COMMENT_UUID\", uuid);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"comment\": \"Test Komen 4\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/{{VERSION}}/comments/{{ARTICLE_UUID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"{{VERSION}}",
+								"comments",
+								"{{ARTICLE_UUID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Semua Komen",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// === Config ===",
+									"const responseData = pm.response.json();",
+									"const dataFields = [\"uuid\", \"comment\", \"article\", \"author\", \"likes\", \"replies\"];",
+									"// === Tests ===",
+									"utils.setPm(pm);",
+									"utils.expectStatus(200);",
+									"utils.expectContentTypeJSON();",
+									"utils.expectStandardResponseStructure(responseData);",
+									"utils.expectFieldsExist(responseData.data[0], dataFields);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/{{VERSION}}/comments",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"{{VERSION}}",
+								"comments"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Lihat Komen dengan Artikel",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// === Config ===",
+									"const responseData = pm.response.json();",
+									"const dataFields = [\"uuid\", \"comment\", \"article\", \"author\", \"likes\", \"replies\"];",
+									"",
+									"// === Tests ===",
+									"utils.setPm(pm);",
+									"utils.expectStatus(200);",
+									"utils.expectContentTypeJSON();",
+									"utils.expectStandardResponseStructure(responseData);",
+									"utils.expectFieldsExist(responseData.data[0], dataFields);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/{{VERSION}}/comments/{{ARTICLE_UUID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"{{VERSION}}",
+								"comments",
+								"{{ARTICLE_UUID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Ubah Komen",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// === Config ===",
+									"const responseData = pm.response.json();",
+									"const dataFields = [\"uuid\", \"comment\", \"article\", \"author\", \"likes\", \"replies\"];",
+									"",
+									"// === Tests ===",
+									"utils.setPm(pm);",
+									"utils.expectStatus(200);",
+									"utils.expectContentTypeJSON();",
+									"utils.expectStandardResponseStructure(responseData);",
+									"utils.expectFieldsExist(responseData.data, dataFields);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"comment\": \"Ubah Komen\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/{{VERSION}}/comments/{{COMMENT_UUID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"{{VERSION}}",
+								"comments",
+								"{{COMMENT_UUID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Suka / Batal Suka Komen",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// === Config ===",
+									"const responseData = pm.response.json();",
+									"const dataFields = [\"comment_id\", \"is_liked\", \"likes\"];",
+									"",
+									"// === Tests ===",
+									"utils.setPm(pm);",
+									"utils.expectStatus(200);",
+									"utils.expectContentTypeJSON();",
+									"utils.expectStandardResponseStructure(responseData);",
+									"utils.expectFieldsExist(responseData.data, dataFields);",
+									"",
+									"if (pm.response.code === 200) {",
+									"    pm.execution.setNextRequest(\"Buat Balasan\");",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/{{VERSION}}/comments/{{COMMENT_UUID}}/like",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"{{VERSION}}",
+								"comments",
+								"{{COMMENT_UUID}}",
+								"like"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Hapus Komen",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// === Config ===",
+									"const responseData = pm.response.json();",
+									"",
+									"// === Tests ===",
+									"utils.expectStatus(200);",
+									"utils.expectContentTypeJSON();",
+									"utils.expectStandardResponseStructure(responseData);",
+									"utils.expectEmptyDataObject(responseData.data);",
+									"",
+									"if (pm.response.code === 200) {",
+									"    pm.execution.setNextRequest(\"Hapus Artikel\");",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/{{VERSION}}/comments/{{COMMENT_UUID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"{{VERSION}}",
+								"comments",
+								"{{COMMENT_UUID}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Balasan",
+			"item": [
+				{
+					"name": "Buat Balasan",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// === Config ===",
+									"const responseData = pm.response.json();",
+									"const dataFields = [\"uuid\", \"reply\", \"comment\", \"author\", \"likes\"];",
+									"const { uuid } = responseData?.data || {};",
+									"",
+									"// === Tests ===",
+									"utils.setPm(pm);",
+									"utils.expectStatus(201);",
+									"utils.expectContentTypeJSON();",
+									"utils.expectStandardResponseStructure(responseData);",
+									"utils.expectFieldsExist(responseData.data, dataFields);",
+									"utils.setEnv(\"REPLY_UUID\", uuid);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"reply\": \"Balasan 3 Test Komen 2\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/{{VERSION}}/replies/{{COMMENT_UUID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"{{VERSION}}",
+								"replies",
+								"{{COMMENT_UUID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Semua Balasan",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// === Config ===",
+									"const responseData = pm.response.json();",
+									"const dataFields = [\"uuid\", \"reply\", \"comment\", \"author\", \"likes\"];",
+									"",
+									"// === Tests ===",
+									"utils.expectStatus(200);",
+									"utils.expectContentTypeJSON();",
+									"utils.expectStandardResponseStructure(responseData);",
+									"utils.expectFieldsExist(responseData.data[0], dataFields);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/{{VERSION}}/replies",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"{{VERSION}}",
+								"replies"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Lihat Balasan dengan Komen",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// === Config ===",
+									"const responseData = pm.response.json();",
+									"const dataFields = [\"uuid\", \"reply\", \"comment\", \"author\", \"likes\"];",
+									"",
+									"// === Tests ===",
+									"utils.expectStatus(200);",
+									"utils.expectContentTypeJSON();",
+									"utils.expectStandardResponseStructure(responseData);",
+									"utils.expectFieldsExist(responseData.data[0], dataFields);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/{{VERSION}}/replies/{{COMMENT_UUID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"{{VERSION}}",
+								"replies",
+								"{{COMMENT_UUID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Ubah Balasan",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// === Config ===",
+									"const responseData = pm.response.json();",
+									"const dataFields = [\"uuid\", \"reply\", \"comment\", \"author\", \"likes\"];",
+									"",
+									"// === Tests ===",
+									"utils.expectStatus(200);",
+									"utils.expectContentTypeJSON();",
+									"utils.expectStandardResponseStructure(responseData);",
+									"utils.expectFieldsExist(responseData.data, dataFields);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"reply\": \"Balasan 2 Test Komen 3\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/{{VERSION}}/replies/{{REPLY_UUID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"{{VERSION}}",
+								"replies",
+								"{{REPLY_UUID}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Suka / Batal Suka Balasan",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// === Config ===",
+									"const responseData = pm.response.json();",
+									"const dataFields = [\"reply_id\", \"is_liked\", \"likes\"];",
+									"",
+									"// === Tests ===",
+									"utils.expectStatus(200);",
+									"utils.expectContentTypeJSON();",
+									"utils.expectStandardResponseStructure(responseData);",
+									"utils.expectFieldsExist(responseData.data, dataFields);"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/{{VERSION}}/replies/{{REPLY_UUID}}/like",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"{{VERSION}}",
+								"replies",
+								"{{REPLY_UUID}}",
+								"like"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Hapus Balasan",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// === Config ===",
+									"const responseData = pm.response.json();",
+									"",
+									"// === Tests ===",
+									"utils.expectStatus(200);",
+									"utils.expectContentTypeJSON();",
+									"utils.expectStandardResponseStructure(responseData);",
+									"utils.expectEmptyDataObject(responseData.data);",
+									"",
+									"if (pm.response.code === 200) {",
+									"    pm.execution.setNextRequest(\"Hapus Komen\");",
+									"}"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{TOKEN}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/{{VERSION}}/replies/{{REPLY_UUID}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"{{VERSION}}",
+								"replies",
+								"{{REPLY_UUID}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// === Helper Functions (Reusable Across Requests) ===",
+					"let _pm = null;",
+					"utils = {",
+					"    setPm(scriptPm){",
+					"        _pm = scriptPm;",
+					"    },",
+					"",
+					"    setEnv(field, value) {",
+					"        if (value !== undefined && value !== null) {",
+					"            _pm.environment.set(field.toUpperCase(), value);",
+					"        }",
+					"    },",
+					"",
+					"    expectStatus(code) {",
+					"        pm.test(`Response status code is ${code}`, () => {",
+					"            pm.expect(pm.response.code).to.equal(code);",
+					"        });",
+					"    },",
+					"",
+					"    expectContentTypeJSON() {",
+					"        const contentType = pm.response.headers.get(\"Content-Type\");",
+					"        pm.test(\"Content-Type is application/json\", () => {",
+					"            pm.expect(contentType).to.include(\"application/json\");",
+					"        });",
+					"    },",
+					"",
+					"    expectNonEmptyField(obj, field) {",
+					"        pm.test(`${field} is not empty`, () => {",
+					"            pm.expect(obj?.[field], `${field} should exist and not be empty`).to.exist.and.to.not.be.empty;",
+					"        });",
+					"    },",
+					"",
+					"    expectStandardResponseStructure(data) {",
+					"        pm.test(\"Response contains required fields\", () => {",
+					"            [\"code\", \"status\", \"message\", \"data\"].forEach(field =>",
+					"                pm.expect(data).to.have.property(field)",
+					"            );",
+					"        });",
+					"    },",
+					"",
+					"    storeFieldsFromData(data, fields) {",
+					"        fields.forEach(field => this.setEnv(field, data[field]));",
+					"    },",
+					"",
+					"    expectEmptyDataObject(data) {",
+					"        pm.test(\"Data object should be empty\", () => {",
+					"            pm.expect(data).to.be.an(\"object\").that.is.empty;",
+					"        });",
+					"    },",
+					"",
+					"    expectFieldsExistNotEmpty(obj, fields) {",
+					"        fields.forEach(field => {",
+					"            this.expectNonEmptyField(obj, field);",
+					"        });",
+					"    },",
+					"",
+					"    expectFieldsExist(obj, fields) {",
+					"        pm.test(`Property ${fields} should exist`, () => {",
+					"            fields.forEach(field => {",
+					"                pm.expect(obj, `${field} should exist`).to.have.property(field);",
+					"            });",
+					"        });",
+					"    },",
+					"",
+					"    expectExactFieldValue(actual, expected) {",
+					"        pm.test(`${actual} matches with ${expected}`, () => {",
+					"            pm.expect(actual).to.equal(expected);",
+					"        });",
+					"    },",
+					"",
+					"    expectArrayWithMinLength(array, min, label = \"Array\") {",
+					"        pm.test(`${label} has at least ${min} item(s)`, () => {",
+					"            pm.expect(array).to.be.an(\"array\").with.lengthOf.at.least(min);",
+					"        });",
+					"    },",
+					"",
+					"    expectContentType(expectedType) {",
+					"        pm.test(`Response Content-Type is ${expectedType}`, () => {",
+					"            const contentType = pm.response.headers.get(\"Content-Type\");",
+					"            pm.expect(contentType).to.eql(expectedType);",
+					"        });",
+					"    },",
+					"};",
+					"",
+					""
+				]
+			}
+		}
+	]
+}

@@ -6,15 +6,8 @@ import { UserModel } from "@models/users.model";
 
 export type UserRoleCreationAttributes = UserRole;
 
-export class UserRoleModel extends Model<UserRole, UserRoleCreationAttributes> implements UserRole {
-  public user_id: number;
-  public role_id: number;
-
-  public role?: RoleModel;
-
-  public readonly created_at!: Date;
-  public readonly updated_at!: Date;
-  public readonly deleted_at: Date;
+export class UserRoleModel extends Model<UserRole, UserRoleCreationAttributes> {
+  // No public fields here! Let Sequelize handle attributes.
 }
 
 export default function (sequelize: Sequelize): typeof UserRoleModel {

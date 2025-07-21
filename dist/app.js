@@ -18,13 +18,11 @@ const _hpp = /*#__PURE__*/ _interop_require_default(require("hpp"));
 const _morgan = /*#__PURE__*/ _interop_require_default(require("morgan"));
 const _expressuseragent = /*#__PURE__*/ _interop_require_default(require("express-useragent"));
 const _requestip = /*#__PURE__*/ _interop_require_default(require("request-ip"));
-const _fs = /*#__PURE__*/ _interop_require_default(require("fs"));
-const _path = /*#__PURE__*/ _interop_require_default(require("path"));
 const _index = require("./config/index");
-const _database = require("./database");
 const _errormiddleware = require("./middlewares/error.middleware");
 const _ratelimittermiddleware = /*#__PURE__*/ _interop_require_default(require("./middlewares/rate-limitter.middleware"));
 const _logger = require("./utils/logger");
+const _dblazy = require("./database/db-lazy");
 function _define_property(obj, key, value) {
     if (key in obj) {
         Object.defineProperty(obj, key, {
@@ -53,43 +51,6 @@ let App = class App {
     }
     getServer() {
         return this.app;
-    }
-    async connectToDatabase() {
-        const { Client } = require('pg');
-        const { DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_DATABASE } = process.env;
-        const client = new Client({
-            host: DB_HOST,
-            port: DB_PORT ? Number(DB_PORT) : undefined,
-            user: DB_USER,
-            password: DB_PASSWORD,
-            database: 'postgres'
-        });
-        try {
-            await client.connect();
-            const res = await client.query('SELECT 1 FROM pg_database WHERE datname = $1', [
-                DB_DATABASE
-            ]);
-            if (res.rowCount === 0) {
-                await client.query(`CREATE DATABASE "${DB_DATABASE}"`);
-                _logger.logger.info(`Database '${DB_DATABASE}' created successfully.`);
-            } else {
-                _logger.logger.info(`Database '${DB_DATABASE}' already exists.`);
-            }
-        } catch (err) {
-            _logger.logger.error('Error checking/creating database: ' + err.message);
-            process.exit(1);
-        } finally{
-            await client.end();
-        }
-    }
-    async initialize() {
-        while(!_database.DB || !_database.DB.sequelize){
-            await new Promise((resolve)=>setTimeout(resolve, 100));
-        }
-        await _database.DB.sequelize.sync({
-            alter: true,
-            force: false
-        });
     }
     initializeMiddlewares() {
         this.app.use((0, _morgan.default)(_index.LOG_FORMAT, {
@@ -129,21 +90,38 @@ let App = class App {
         _define_property(this, "limit", new _ratelimittermiddleware.default());
         _define_property(this, "env", void 0);
         _define_property(this, "port", void 0);
+        _define_property(this, "_dbSynced", false);
         this.app = (0, _express.default)();
         this.env = _index.NODE_ENV || "development";
         this.port = _index.PORT || 3000;
-        const uploadsDir = _path.default.join(process.cwd(), "uploads");
-        if (!_fs.default.existsSync(uploadsDir)) {
-            _fs.default.mkdirSync(uploadsDir, {
-                recursive: true
-            });
-        }
-        this.initialize().then(()=>{
-            this.initializeRateLimitter();
-            this.initializeMiddlewares();
-            this.initializeRoutes(routes);
-            this.initializeErrorHandling();
+        this.app.use(async (req, res, next)=>{
+            try {
+                const db = await (0, _dblazy.getDB)();
+                if (this.env === 'development' || this.env === 'test') {
+                    if (!this._dbSynced) {
+                        await db.sequelize.sync({
+                            alter: true,
+                            force: true
+                        });
+                        _logger.logger.info('Database synced with force: true (all tables dropped and recreated)');
+                        const roleSeeder = require('./database/seeders/01-insert-role.js');
+                        await roleSeeder.up(db.sequelize.getQueryInterface(), db.sequelize.constructor);
+                        _logger.logger.info('Role seeder executed');
+                        this._dbSynced = true;
+                    }
+                }
+                next();
+            } catch (err) {
+                _logger.logger.error("DB initialization failed: " + err.message);
+                res.status(500).json({
+                    message: "Database initialization failed"
+                });
+            }
         });
+        this.initializeRateLimitter();
+        this.initializeMiddlewares();
+        this.initializeRoutes(routes);
+        this.initializeErrorHandling();
     }
 };
 

@@ -1,1 +1,1 @@
-{"version":3,"sources":["../../src/api/index.ts"],"sourcesContent":["import { app } from '../server';\nexport default app.app; "],"names":["app"],"mappings":";;;;+BACA;;;eAAA;;;wBADoB;MACpB,WAAeA,WAAG,CAACA,GAAG"}
+{"version":3,"sources":["../../src/api/index.ts"],"sourcesContent":["import { app } from '../server';\nimport \"pg\";\n\n// export default app;\napp.listen();\n"],"names":["app","listen"],"mappings":";;;;wBAAoB;QACb;AAGPA,WAAG,CAACC,MAAM"}

@@ -23,5 +23,10 @@ export class AuthRoute implements Routes {
     this.router.post(`/v1/${this.path}/logout`, AuthMiddleware, this.auth.logOut);
 
     this.router.post(`/v1/${this.path}/verify`, this.auth.verifyEmail);
+
+    // Assign role endpoint (development/testing only)
+    if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
+      this.router.post(`/v1/${this.path}/:uuid/assign-role`, this.auth.assignRoleToUser);
+    }
   }
 }

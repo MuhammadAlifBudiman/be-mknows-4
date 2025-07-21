@@ -1,4 +1,4 @@
-import { DB } from "@/database";
+import { getDB } from "@/database/db-lazy";
 import { CreateCommentDto, UpdateCommentDto } from "@/dtos/comments.dto";
 import { HttpException } from "@exceptions/HttpException";
 import { Comment, CommentParsed } from "@/interfaces/comment.interface";
@@ -28,6 +28,7 @@ export class CommentService {
   }
 
   public async getComments(): Promise<{comments: CommentParsed[]}> {
+    const DB = await getDB();
     const comments = await DB.ArticlesComments.findAll({});
 
     const repliesCountPromises = comments.map(comment => {
@@ -61,6 +62,7 @@ export class CommentService {
   }
 
   public async getCommentsByArticle(article_id: string): Promise<{comments: CommentParsed[]}> {
+    const DB = await getDB();
     const article = await DB.Articles.findOne({ where: { uuid: article_id }, attributes: ["pk"] });
     if(!article) {
       throw new HttpException(false, 404, "Article is not found");
@@ -100,6 +102,7 @@ export class CommentService {
   }
 
   public async getCommentById(comment_id: string): Promise<CommentParsed> {
+    const DB = await getDB();
     const comment = await DB.ArticlesComments.findOne({ where: { uuid: comment_id }});
     const likesCount = await DB.ArticleCommentsLikes.count({
       where: { comment_id: comment.pk }
@@ -119,6 +122,7 @@ export class CommentService {
   }
 
   public async createComment(article_id: string, author_id: number, data: CreateCommentDto): Promise<CommentParsed> {
+    const DB = await getDB();
     const article = await DB.Articles.findOne({ where: { uuid: article_id }, attributes: ["pk"] });
     const comment = await DB.ArticlesComments.create({ article_id: article.pk, author_id, ...data });
     delete comment.dataValues.pk;
@@ -127,6 +131,7 @@ export class CommentService {
   }
 
   public async updateComment(comment_id: string, data: UpdateCommentDto): Promise<CommentParsed> {
+    const DB = await getDB();
     const comment = await DB.ArticlesComments.findOne({ where: { uuid: comment_id }});
     const updatedData: any = {};
     
@@ -147,6 +152,7 @@ export class CommentService {
   }
 
   public async deleteComment(comment_id: string): Promise<boolean> {
+    const DB = await getDB();
     const comment = await DB.ArticlesComments.findOne({ where: { uuid: comment_id }});
 
     if(!comment) {
@@ -176,6 +182,7 @@ export class CommentService {
   }
 
   public async likeComment(comment_id: string, user_id: number): Promise<object> {
+    const DB = await getDB();
     const comment = await DB.ArticlesComments.findOne({ where: { uuid: comment_id }});
 
     if(!comment) {

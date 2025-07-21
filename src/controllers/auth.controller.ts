@@ -53,4 +53,14 @@ export class AuthController {
       email: response.email
     }));
   });
+
+  public assignRoleToUser = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
+    const user_uuid = req.params.uuid;
+    const { role } = req.body; 
+    if (!role) {
+      throw new HttpException(false, 400, "Role is required");
+    }
+    const result = await this.auth.assignRoleToUser(user_uuid, role);
+    res.status(200).json(apiResponse(200, "OK", `Role '${role}' has been assigned to user`, result));
+  });
 }

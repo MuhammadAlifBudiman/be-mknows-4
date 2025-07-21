@@ -7,7 +7,10 @@ import { LOG_DIR } from "@config/index";
 // logs dir
 const logDir: string = join(__dirname, LOG_DIR);
 
-if (!existsSync(logDir)) {
+// Detect if running on Vercel (read-only fs)
+const isVercel = !!process.env.VERCEL;
+
+if (!isVercel && !existsSync(logDir)) {
   mkdirSync(logDir);
 }
 
@@ -18,14 +21,15 @@ const logFormat = winston.format.printf(({ timestamp, level, message }) => `${ti
  * Log Level
  * error: 0, warn: 1, info: 2, http: 3, verbose: 4, debug: 5, silly: 6
  */
-const logger = winston.createLogger({
-  format: winston.format.combine(
-    winston.format.timestamp({
-      format: "YYYY-MM-DD HH:mm:ss",
-    }),
-    logFormat,
-  ),
-  transports: [
+// Use winston.transport[] for correct typing
+const transports: winston.transport[] = [
+  new winston.transports.Console({
+    format: winston.format.combine(winston.format.splat(), winston.format.colorize()),
+  }),
+];
+
+if (!isVercel) {
+  transports.push(
     // debug log setting
     new winstonDaily({
       level: "debug",
@@ -47,14 +51,18 @@ const logger = winston.createLogger({
       json: false,
       zippedArchive: true,
     }),
-  ],
-});
+  );
+}
 
-logger.add(
-  new winston.transports.Console({
-    format: winston.format.combine(winston.format.splat(), winston.format.colorize()),
-  }),
-);
+const logger = winston.createLogger({
+  format: winston.format.combine(
+    winston.format.timestamp({
+      format: "YYYY-MM-DD HH:mm:ss",
+    }),
+    logFormat,
+  ),
+  transports,
+});
 
 const stream = {
   write: (message: string) => {

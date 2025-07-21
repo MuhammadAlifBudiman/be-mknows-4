@@ -10,6 +10,8 @@ import { RequestWithUser } from "@interfaces/authentication/token.interface";
 import { apiResponse } from "@utils/apiResponse";
 import { HttpException } from "@/exceptions/HttpException";
 
+import { NODE_ENV } from "@config/index";
+
 export class FileController {
   private file = Container.get(FileService);
 
@@ -25,15 +27,17 @@ export class FileController {
 
   public getFileWithUUID = asyncHandler(async (req: Request, res: Response, next: NextFunction) => {
     const { file_id } = req.params;
-
     const file = await this.file.getFileWithUUID(file_id);
-    const filepath = path.join(process.cwd(), `./uploads/${file.name}`);
-
-    if (!file || !fs.existsSync(filepath)) {
+    if (!file || !file.url) {
       throw new HttpException(false, 400, "File is not found");
     }
-
-    res.sendFile(filepath);
+    if (NODE_ENV === 'production') {
+      res.redirect(file.url);
+    } else {
+      // Local: send file from uploads directory
+      const filepath = path.join(process.cwd(), `./uploads/${file.name}`);
+      res.sendFile(filepath);
+    }
   });
 
   public getFileMine = asyncHandler(async (req: RequestWithUser, res: Response, next: NextFunction) => {

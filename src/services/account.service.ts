@@ -1,5 +1,5 @@
 import { Service } from "typedi";
-import { DB } from "@database";
+import { getDB } from "@/database/db-lazy";
 
 import { User } from "@interfaces/user.interface";
 import { UserSession } from "@interfaces/user-session.interface";
@@ -12,22 +12,33 @@ import { HttpException } from "@/exceptions/HttpException";
 @Service()
 export class AccountService {
   public async getProfileByUserId(user_id: number): Promise<User> {
+    const DB = await getDB();
+
     const user: UserModel = await DB.Users.findOne({ 
       attributes: { exclude: ["pk"] },
       where: { pk: user_id }
     });
 
-    const file = await DB.Files.findOne({ where: { pk: user.display_picture }});
+    if (!user) {
+      throw new HttpException(false, 404, "User not found");
+    }
+
+    let displayPictureUuid: string | null = null;
+    if (user.display_picture) {
+      const file = await DB.Files.findOne({ where: { pk: user.display_picture }});
+      displayPictureUuid = file?.uuid || null;
+    }
 
     const response = {
       ...user.get(),
-      display_picture: file?.uuid,
+      display_picture: displayPictureUuid,
     };
 
     return response;
   }
 
   public async getSessionsHistoriesByUserId(user_id: number, session_id: string): Promise<UserSession[]> {
+    const DB = await getDB();
     const userSessions: UserSessionModel[] = await DB.UsersSessions.findAll({
       attributes: { exclude: ["pk", "user_id"] },
       where: { user_id }
@@ -43,6 +54,7 @@ export class AccountService {
   }
 
   public async updateUserProfile(user_id: number, data: UpdateUserProfileDto): Promise<User> {
+    const DB = await getDB();
     const updatedData: any = {};
   
     if (data.full_name) updatedData.full_name = data.full_name;
@@ -69,12 +81,16 @@ export class AccountService {
     delete user.dataValues.pk;
     delete user.dataValues.password;
 
-    const file = await DB.Files.findOne({ where: { pk: user.display_picture }});
+    let displayPictureUuid: string | null = null;
+    if (user.display_picture) {
+      const file = await DB.Files.findOne({ where: { pk: user.display_picture }});
+      displayPictureUuid = file?.uuid || null;
+    }
     
     const response = {
       ...user.get(),
-      display_picture: file?.uuid,
-    }
+      display_picture: displayPictureUuid,
+    };
 
     return response;
   }

@@ -29,7 +29,6 @@ module.exports = {
   production: {
     dialect: "postgres",
     host: DB_HOST,
-
     username: DB_USER,
     password: DB_PASSWORD,
     database: DB_DATABASE,
@@ -38,12 +37,18 @@ module.exports = {
       underscored: true,
       freezeTableName: true,
       paranoid: true,
-
       createdAt: "created_at",
       updatedAt: "updated_at",
       deletedAt: "deleted_at",
     },
     logging: false,
     benchmark: false,
+    ssl: true,
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false,
+      },
+    },
   }
 }

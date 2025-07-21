@@ -5,20 +5,9 @@ import { UserModel } from "@models/users.model";
 
 export type UserSessionCreationAttributes = Optional<UserSession, "pk" | "uuid">;
 
-export class UserSessionModel extends Model<UserSession, UserSessionCreationAttributes> implements UserSessionCreationAttributes {
-  public pk: number;
-  public uuid: string;
-  
-  public user_id: number;
-  public useragent: string;
-  public ip_address: string;
-  public status: string; // ["EXPIRED", "ACTIVE", "LOGOUT"]
-
-  public readonly user: UserModel;
-
-  public readonly created_at!: Date;
-  public readonly updated_at!: Date;
-  public readonly deleted_at: Date;
+export class UserSessionModel extends Model<UserSession, UserSessionCreationAttributes> {
+  uuid: string;
+  // No public fields here! Let Sequelize handle attributes.
 }
 
 export default function (sequelize: Sequelize): typeof UserSessionModel {
