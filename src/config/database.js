@@ -31,6 +31,7 @@ module.exports = {
         require: true,
         rejectUnauthorized: false,
       },
+      sslmode: "require",
     },
   },
   production: {
@@ -56,6 +57,7 @@ module.exports = {
         require: true,
         rejectUnauthorized: false,
       },
+      sslmode: "require",
     },
   }
 }
