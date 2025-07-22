@@ -25,6 +25,7 @@ module.exports = {
     logQueryParameters: NODE_ENV === "development",
     logging: false,
     benchmark: false,
+    ssl: true,
   },
   production: {
     dialect: "postgres",
