@@ -1,3 +1,7 @@
+/**
+ * Rate limiting middleware using express-rate-limit.
+ * Provides default and email verification rate limiters with custom error handling.
+ */
 import {
   rateLimit,
   type RateLimitRequestHandler,
@@ -5,7 +9,17 @@ import {
 import { RATE_DELAY, RATE_LIMIT } from "@config/index";
 import { HttpExceptionTooManyRequests } from "@/exceptions/HttpException";
 
+/**
+ * Limitter class provides rate limiting strategies for API endpoints.
+ */
 class Limitter {
+  /**
+   * Default rate limiter for general requests.
+   * - windowMs: Delay in ms (from config, in minutes)
+   * - max: Max requests per window (from config)
+   * - keyGenerator: Uses IP address
+   * - handler: Throws custom TooManyRequests exception
+   */
   public default = (): RateLimitRequestHandler => {
     const delay = Number(RATE_DELAY) * 60 * 1000; // 1 menit
 
@@ -21,6 +35,13 @@ class Limitter {
     });
   };
 
+  /**
+   * Rate limiter for email verification requests.
+   * - windowMs: 3 minutes
+   * - max: 5 requests per window
+   * - keyGenerator: Uses IP address
+   * - handler: Throws custom TooManyRequests exception
+   */
   public emailVerification = (): RateLimitRequestHandler => {
     const delay = 3 * 60 * 1000; // 3 menit
 

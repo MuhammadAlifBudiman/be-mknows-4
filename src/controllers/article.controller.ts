@@ -41,43 +41,73 @@ export class ArticleController {
     res.status(201).json(apiResponse(201, "OK", "Create Article Success", response));
   });
 
+  /**
+   * Update an article by ID for the authenticated user
+   * @param req - Express request with article ID, user ID, and update data
+   * @param res - Express response
+   * @param next - Express next middleware
+   */
   public updateArticle = asyncHandler(async (req: RequestWithUser, res: Response, next: NextFunction) => {
     const { article_id } = req.params;
     const user_id = req.user.pk as number;
     const data: UpdateArticleDto = req.body;
 
-    const response: ArticleParsed = await this.article.updateArticle(article_id, user_id, data);
-    res.status(200).json(apiResponse(200, "OK", "Update Article Success", response));
+    const response: ArticleParsed = await this.article.updateArticle(article_id, user_id, data); // Update article
+    res.status(200).json(apiResponse(200, "OK", "Update Article Success", response)); // Respond with updated article
   });
 
+  /**
+   * Delete an article by ID for the authenticated user
+   * @param req - Express request with article ID and user ID
+   * @param res - Express response
+   * @param next - Express next middleware
+   */
   public deleteArticle = asyncHandler(async (req: RequestWithUser, res: Response, next: NextFunction) => {
     const { article_id } = req.params;
     const user_id = req.user.pk as number;
 
-    await this.article.deleteArticle(article_id, user_id);
-    res.status(200).json(apiResponse(200, "OK", "Delete Article Success", {}));
+    await this.article.deleteArticle(article_id, user_id); // Delete article
+    res.status(200).json(apiResponse(200, "OK", "Delete Article Success", {})); // Respond with success
   });
 
+  /**
+   * Like an article by ID for the authenticated user
+   * @param req - Express request with article ID and user ID
+   * @param res - Express response
+   * @param next - Express next middleware
+   */
   public likeArticle = asyncHandler(async (req: RequestWithUser, res: Response, next: NextFunction) => {
     const { article_id } = req.params;
     const user_id = req.user.pk as number;
 
-    const response = await this.article.likeArticle(user_id, article_id);
-    res.status(200).json(apiResponse(200, "OK", "Like Article Success", response));
+    const response = await this.article.likeArticle(user_id, article_id); // Like article
+    res.status(200).json(apiResponse(200, "OK", "Like Article Success", response)); // Respond with like result
   });
 
+  /**
+   * Bookmark an article by ID for the authenticated user
+   * @param req - Express request with article ID and user ID
+   * @param res - Express response
+   * @param next - Express next middleware
+   */
   public bookmarkArticle = asyncHandler(async (req: RequestWithUser, res: Response, next: NextFunction) => {
     const { article_id } = req.params;
     const user_id = req.user.pk as number;
 
-    const response = await this.article.bookmarkArticle(user_id, article_id);
-    res.status(200).json(apiResponse(200, "OK", "Bookmark Article Success", response));
+    const response = await this.article.bookmarkArticle(user_id, article_id); // Bookmark article
+    res.status(200).json(apiResponse(200, "OK", "Bookmark Article Success", response)); // Respond with bookmark result
   });
 
+  /**
+   * Get all articles bookmarked by the authenticated user
+   * @param req - Express request with user ID
+   * @param res - Express response
+   * @param next - Express next middleware
+   */
   public getBookmarkByMe = asyncHandler(async (req: RequestWithUser, res: Response, next: NextFunction) => {
     const user_id = req.user.pk as number;
 
-    const response = await this.article.getBookmarkByMe(user_id);
+    const response = await this.article.getBookmarkByMe(user_id); // Get user's bookmarks
     res.status(200).json(apiResponse(200, "OK", "Get Bookmark Success", response.articles));
   });
 

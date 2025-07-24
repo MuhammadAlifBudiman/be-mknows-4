@@ -1,17 +1,30 @@
+// Import Sequelize operators and instance for database queries
 import { Op, Sequelize } from "sequelize";
+// Import Service decorator from typedi for dependency injection
 import { Service } from "typedi";
+// Import function to get database instance lazily
 import { getDB } from "@/database/db-lazy";
-
+// Import ArticleModel for ORM operations on articles table
 import { ArticleModel } from "@models/articles.model";
-
+// Import interfaces for parsed articles, query params, and pagination
 import { ArticleParsed, ArticlePopularQueryParams, ArticleQueryParams } from "@interfaces/article.interface";
 import { Pagination } from "@interfaces/common/pagination.interface";
+// Import DTOs for creating and updating articles
 import { CreateArticleDto, UpdateArticleDto } from "@dtos/articles.dto";
+// Import custom HTTP exception for error handling
 import { HttpException } from "@exceptions/HttpException";
 
-
+/**
+ * Service class for article-related operations.
+ * Handles CRUD, likes, bookmarks, views, and popular article logic.
+ */
 @Service()
 export class ArticleService {
+  /**
+   * Parses an ArticleModel instance into an ArticleParsed object.
+   * @param article - The ArticleModel instance.
+   * @returns ArticleParsed - The parsed article object.
+   */
   private articleParsed(article: ArticleModel): ArticleParsed {
     return {
       uuid: article.uuid,
@@ -33,6 +46,11 @@ export class ArticleService {
     };
   }
 
+  /**
+   * Retrieves articles with pagination, search, and sorting.
+   * @param query - Query parameters for filtering and pagination.
+   * @returns Promise<{ articles: ArticleParsed[], pagination: Pagination }>
+   */
   public async getArticles(query: ArticleQueryParams): Promise<{ articles: ArticleParsed[], pagination: Pagination }> {
     const { page = "1", limit = "10", search, order, sort } = query;
     const offset = (parseInt(page) - 1) * parseInt(limit);
@@ -147,6 +165,12 @@ export class ArticleService {
     return { articles: transformedArticles, pagination };
   }
 
+  /**
+   * Retrieves a single article by its UUID.
+   * @param article_id - The UUID of the article.
+   * @returns Promise<ArticleParsed>
+   * @throws HttpException if article is not found.
+   */
   public async getArticleById(article_id: string): Promise<ArticleParsed> {
     const article = await (await getDB()).Articles.findOne({
       where: { uuid: article_id },
@@ -184,6 +208,13 @@ export class ArticleService {
     return response;
   }
 
+  /**
+   * Retrieves articles by category UUID with pagination.
+   * @param query - Query parameters for filtering and pagination.
+   * @param category_id - The UUID of the category.
+   * @returns Promise<{ articles: ArticleParsed[], pagination: Pagination }>
+   * @throws HttpException if category or articles are not found.
+   */
   public async getArticlesByCategory(query: ArticleQueryParams, category_id: string): Promise<{ articles: ArticleParsed[], pagination: Pagination }> {
     const category = await (await getDB()).Categories.findOne({ attributes: ["pk"], where:{ uuid: category_id } });
     if (!category) {
@@ -259,6 +290,13 @@ export class ArticleService {
     return { articles: transformedArticles, pagination: null };
   }
 
+  /**
+   * Creates a new article with the given author and data.
+   * @param author_id - The author's user ID.
+   * @param data - DTO containing article creation fields.
+   * @returns Promise<ArticleParsed>
+   * @throws HttpException if thumbnail or categories are not found.
+   */
   public async createArticle(author_id: number, data: CreateArticleDto): Promise<ArticleParsed> {
     const thumbnail = await (await getDB()).Files.findOne({ attributes: ["pk"], where: { uuid: data.thumbnail }});
     if(!thumbnail) throw new HttpException(false, 404, "File is not found");
@@ -303,6 +341,14 @@ export class ArticleService {
     }
   }
   
+  /**
+   * Updates an existing article by its UUID and author ID.
+   * @param article_id - The UUID of the article.
+   * @param author_id - The author's user ID.
+   * @param data - DTO containing article update fields.
+   * @returns Promise<ArticleParsed>
+   * @throws HttpException if article, file, or categories are not found.
+   */
   public async updateArticle(article_id: string, author_id: number, data: UpdateArticleDto): Promise<ArticleParsed> {
     const article = await (await getDB()).Articles.findOne({ where: { uuid: article_id }});
 
@@ -385,6 +431,13 @@ export class ArticleService {
     }
   }
 
+  /**
+   * Deletes an article and all its related data (comments, likes, bookmarks, etc).
+   * @param article_id - The UUID of the article.
+   * @param author_id - The author's user ID.
+   * @returns Promise<boolean> - True if deletion is successful.
+   * @throws HttpException if article is not found.
+   */
   public async deleteArticle(article_id: string, author_id: number): Promise<boolean> {
     const article = await (await getDB()).Articles.findOne({ where: { uuid: article_id, author_id }});
     if (!article) {
@@ -420,6 +473,13 @@ export class ArticleService {
     }
   }
 
+  /**
+   * Likes or unlikes an article for a user.
+   * @param user_id - The user's ID.
+   * @param article_id - The UUID of the article.
+   * @returns Promise<object> - Like status and count.
+   * @throws HttpException if article is not found.
+   */
   public async likeArticle(user_id: number, article_id: string): Promise<object> {
     const article = await (await getDB()).Articles.findOne({ attributes: ["pk"], where: { uuid: article_id } });
     if (!article) {
@@ -448,6 +508,13 @@ export class ArticleService {
     }
   }
 
+  /**
+   * Bookmarks or unbookmarks an article for a user.
+   * @param user_id - The user's ID.
+   * @param article_id - The UUID of the article.
+   * @returns Promise<object> - Bookmark status and count.
+   * @throws HttpException if article is not found.
+   */
   public async bookmarkArticle(user_id: number, article_id: string): Promise<object> {
     const article = await (await getDB()).Articles.findOne({ attributes: ["pk"], where: { uuid: article_id } });
     if (!article) {
@@ -476,6 +543,12 @@ export class ArticleService {
     }
   }
 
+  /**
+   * Retrieves articles bookmarked by the user.
+   * @param user_id - The user's ID.
+   * @returns Promise<{articles: ArticleParsed[]}>
+   * @throws HttpException if bookmarks are empty.
+   */
   public async getBookmarkByMe(user_id: number): Promise<{articles: ArticleParsed[]}> {
 
     const articleBookmark = await (await getDB()).ArticlesBookmarks.findAll({ attributes: ["article_id"], where: { user_id: user_id } });
@@ -521,6 +594,13 @@ export class ArticleService {
     return { articles: transformedArticles };
   }
 
+  /**
+   * Adds a view to an article for a user.
+   * @param article_id - The UUID of the article.
+   * @param user_id - The user's ID.
+   * @returns Promise<boolean> - True if view is added.
+   * @throws HttpException if article is not found.
+   */
   public async addView(article_id: string, user_id: number): Promise<boolean> {
     const article = await (await getDB()).Articles.findOne({ attributes: ["pk"], where: { uuid: article_id } });
     if (!article) {
@@ -544,6 +624,12 @@ export class ArticleService {
     return true
   } 
 
+  /**
+   * Retrieves popular articles based on views, likes, comments, and bookmarks in a date range.
+   * @param query - Query parameters including range.
+   * @returns Promise<{ articles: ArticleParsed[] }>
+   * @throws HttpException if no popular articles are found or range is invalid.
+   */
   public async getPopularArticles(query: ArticlePopularQueryParams): Promise<{ articles: ArticleParsed[] }> {
     const { range } = query;
     const startDate = this.calculateStartDate(range);
@@ -730,6 +816,12 @@ export class ArticleService {
   
 
 
+  /**
+   * Calculates the start date for popular article queries based on range string.
+   * @param range - The range string (e.g., "3 days", "1 week", "today").
+   * @returns Date - The calculated start date.
+   * @throws HttpException if range is not valid.
+   */
   private calculateStartDate(range: string): Date {
     const currentDate = new Date();
     switch (range) {

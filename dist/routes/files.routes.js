@@ -12,6 +12,7 @@ const _express = require("express");
 const _filecontroller = require("../controllers/file.controller");
 const _authmiddleware = require("../middlewares/auth.middleware");
 const _fileuploadermiddleware = require("../middlewares/file-uploader.middleware");
+const _index = require("../config/index");
 function _define_property(obj, key, value) {
     if (key in obj) {
         Object.defineProperty(obj, key, {
@@ -27,7 +28,15 @@ function _define_property(obj, key, value) {
 }
 let FileRoute = class FileRoute {
     initializeRoutes() {
-        this.router.post(`/v1/${this.path}/upload`, _authmiddleware.AuthMiddleware, _fileuploadermiddleware.uploadFile.single("file"), _fileuploadermiddleware.uploadToS3, this.file.uploadFile);
+        const uploadMiddlewares = _index.NODE_ENV === "production" ? [
+            _authmiddleware.AuthMiddleware,
+            _fileuploadermiddleware.uploadFile.single("file"),
+            _fileuploadermiddleware.uploadToS3
+        ] : [
+            _authmiddleware.AuthMiddleware,
+            _fileuploadermiddleware.uploadFile.single("file")
+        ];
+        this.router.post(`/v1/${this.path}/upload`, ...uploadMiddlewares, this.file.uploadFile);
         this.router.get(`/v1/${this.path}/:file_id/preview`, _authmiddleware.AuthMiddleware, this.file.getFileWithUUID);
         this.router.get(`/v1/${this.path}/mine`, _authmiddleware.AuthMiddleware, this.file.getFileMine);
     }

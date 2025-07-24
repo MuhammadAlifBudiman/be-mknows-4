@@ -47,7 +47,7 @@ let ReplyController = class ReplyController {
             const author_id = req.user.pk;
             const data = req.body;
             const response = await this.reply.createReply(comment_id, author_id, data);
-            res.status(200).json((0, _apiResponse.apiResponse)(200, "OK", "Create Reply Success", response));
+            res.status(201).json((0, _apiResponse.apiResponse)(200, "OK", "Create Reply Success", response));
         }));
         _define_property(this, "updateReply", (0, _expressasynchandler.default)(async (req, res, next)=>{
             const { reply_id } = req.params;
@@ -58,7 +58,7 @@ let ReplyController = class ReplyController {
         _define_property(this, "deleteReply", (0, _expressasynchandler.default)(async (req, res, next)=>{
             const { reply_id } = req.params;
             const response = await this.reply.deleteReply(reply_id);
-            res.status(200).json((0, _apiResponse.apiResponse)(200, "OK", "Delete Reply Success", response));
+            res.status(200).json((0, _apiResponse.apiResponse)(200, "OK", "Delete Reply Success", {}));
         }));
         _define_property(this, "likeReply", (0, _expressasynchandler.default)(async (req, res, next)=>{
             const { reply_id } = req.params;
