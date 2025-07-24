@@ -1,13 +1,27 @@
+// Import function to get database instance lazily
 import { getDB } from "@/database/db-lazy";
+// Import DTOs for creating and updating replies
 import { CreateReplyDto, UpdateReplyDto } from "@/dtos/replies.dto";
+// Import custom HTTP exception for error handling
 import { HttpException } from "@exceptions/HttpException";
+// Import interfaces for reply and parsed reply structure
 import { CommentReply, CommentReplyParsed } from "@/interfaces/comment.interface";
+// Import Service decorator from typedi for dependency injection
 import { Service } from "typedi";
+// Import CommentReplyModel for ORM operations on replies table
 import { CommentReplyModel } from "@/models/articles_replies.model";
 
-
+/**
+ * Service class for reply-related operations.
+ * Handles CRUD, likes, and parsing logic for replies.
+ */
 @Service()
 export class ReplyService {
+  /**
+   * Parses a CommentReplyModel instance into a CommentReplyParsed object.
+   * @param reply - The CommentReplyModel instance.
+   * @returns CommentReplyParsed - The parsed reply object.
+   */
   private replyParsed(reply: CommentReplyModel): CommentReplyParsed {
     return {
       uuid: reply.uuid,
@@ -25,6 +39,10 @@ export class ReplyService {
       };
     }
 
+  /**
+   * Retrieves all replies with their like counts.
+   * @returns Promise<{ replies: CommentReplyParsed[] }> - Array of parsed replies.
+   */
   public async getReplies(): Promise<{ replies: CommentReplyParsed[] }> {
     const DB = await getDB();
     const reply = await DB.CommentsReplies.findAll({});
@@ -45,6 +63,12 @@ export class ReplyService {
     return { replies: transformedReplies };
   }
 
+  /**
+   * Retrieves replies for a specific comment by its UUID.
+   * @param comment_id - The UUID of the comment.
+   * @returns Promise<{ replies: CommentReplyParsed[] }> - Array of parsed replies.
+   * @throws HttpException if comment or replies are not found.
+   */
   public async getRepliesByComment(comment_id: string): Promise<{ replies: CommentReplyParsed[] }> {
     const DB = await getDB();
     const comment = await DB.ArticlesComments.findOne({ where: { uuid: comment_id }, attributes: ["pk"] });
@@ -71,6 +95,12 @@ export class ReplyService {
     return { replies: transformedReplies };
   }
 
+  /**
+   * Retrieves a single reply by its UUID.
+   * @param reply_id - The UUID of the reply.
+   * @returns Promise<CommentReplyParsed> - The parsed reply object.
+   * @throws HttpException if reply is not found.
+   */
   public async getReplyById(reply_id: string): Promise<CommentReplyParsed> {
     const DB = await getDB();
     const reply = await DB.CommentsReplies.findOne({ where: { uuid: reply_id } });
@@ -88,6 +118,13 @@ export class ReplyService {
     return response;
   }
 
+  /**
+   * Creates a new reply for a comment and author.
+   * @param comment_id - The UUID of the comment.
+   * @param author_id - The author's user ID.
+   * @param data - DTO containing reply creation fields.
+   * @returns Promise<CommentReplyParsed> - The created reply object.
+   */
   public async createReply(comment_id: string, author_id: number, data: CreateReplyDto): Promise<CommentReplyParsed> {
     const DB = await getDB();
     const comment = await DB.ArticlesComments.findOne({ where: { uuid: comment_id }, attributes: ["pk"] });
@@ -97,6 +134,13 @@ export class ReplyService {
     return this.getReplyById(reply.uuid);
   }
 
+  /**
+   * Updates an existing reply by its UUID.
+   * @param reply_id - The UUID of the reply.
+   * @param data - DTO containing reply update fields.
+   * @returns Promise<CommentReplyParsed> - The updated reply object.
+   * @throws HttpException if no fields are provided.
+   */
   public async updateReply(reply_id: string, data: UpdateReplyDto): Promise<CommentReplyParsed> {
     const DB = await getDB();
     const updatedData: any = {};
@@ -118,6 +162,12 @@ export class ReplyService {
     return this.getReplyById(reply_id);
   }
 
+  /**
+   * Deletes a reply and all its related likes.
+   * @param reply_id - The UUID of the reply.
+   * @returns Promise<boolean> - True if deletion is successful.
+   * @throws HttpException if reply is not found.
+   */
   public async deleteReply(reply_id: string): Promise<boolean> {
     const DB = await getDB();
     const reply = await DB.CommentsReplies.findOne({ where: { uuid: reply_id }});
@@ -143,6 +193,13 @@ export class ReplyService {
     }
   }
 
+  /**
+   * Likes or unlikes a reply for a user.
+   * @param reply_id - The UUID of the reply.
+   * @param user_id - The user's ID.
+   * @returns Promise<object> - Like status and count.
+   * @throws HttpException if reply is not found.
+   */
   public async likeReply(reply_id: string, user_id: number): Promise<object> {
     const DB = await getDB();
     const reply = await DB.CommentsReplies.findOne({ where: { uuid: reply_id }});

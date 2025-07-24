@@ -1,7 +1,12 @@
-import { Sequelize } from "sequelize";
-import { NODE_ENV } from "@config/index";
-import { logger } from "@utils/logger";
-import config from "@config/database";
+/**
+ * Database initialization and model registration for Sequelize ORM.
+ * Connects to the database and registers all models for use throughout the application.
+ */
+import { Sequelize } from "sequelize"; // Sequelize ORM library
+import { NODE_ENV } from "@config/index"; // Current environment
+import { logger } from "@utils/logger"; // Logger utility
+import config from "@config/database"; // Database configuration
+// Import all Sequelize models
 import OTPModel from "@/models/otps.model";
 import RoleModel from "@models/roles.model";
 import FileModel from "@models/files.model";
@@ -19,13 +24,17 @@ import CommentReplyLikeModel from "@/models/articles_replies_like.model";
 import ArticleBookmarkModel from "@/models/articles_bookmark.model";
 import ArticleViewModel from "@/models/articles_views.model";
 
+// Get database configuration for current environment
 const dbConfig = config[NODE_ENV] || config["development"];
 
 // Ensure DB exists before initializing Sequelize
 let DB: any;
 
+/**
+ * Immediately-invoked async function to initialize Sequelize and register models
+ */
 (async () => {
-
+  // Create Sequelize instance
   const sequelize = new Sequelize(
     dbConfig.database as string,
     dbConfig.username as string,
@@ -33,9 +42,11 @@ let DB: any;
     dbConfig
   );
 
+  // Authenticate connection
   await sequelize.authenticate();
   logger.info(`=> Database Connected on ${NODE_ENV}`);
 
+  // Register all models with Sequelize instance
   DB = {
     OTPs: OTPModel(sequelize),
     Files: FileModel(sequelize),
@@ -53,9 +64,10 @@ let DB: any;
     CommentsRepliesLikes: CommentReplyLikeModel(sequelize),
     ArticlesBookmarks: ArticleBookmarkModel(sequelize),
     ArticlesViews: ArticleViewModel(sequelize),
-    sequelize, // connection instance (RAW queries)
-    Sequelize, // library
+    sequelize, // Sequelize connection instance (for raw queries)
+    Sequelize, // Sequelize library
   };
 })();
 
+// Export the DB object for use in other modules
 export { DB };

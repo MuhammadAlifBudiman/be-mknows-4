@@ -11,6 +11,7 @@ Object.defineProperty(exports, "FileService", {
 const _typedi = require("typedi");
 const _dblazy = require("../database/db-lazy");
 const _HttpException = require("../exceptions/HttpException");
+const _index = require("../config/index");
 function _ts_decorate(decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -20,13 +21,17 @@ function _ts_decorate(decorators, target, key, desc) {
 let FileService = class FileService {
     async uploadSingleFile(user_id, file) {
         const DB = await (0, _dblazy.getDB)();
-        const fileUpload = await DB.Files.create({
+        const isProduction = _index.NODE_ENV === 'production';
+        const fileUrl = isProduction ? file.location || null : `/uploads/${file.filename}`;
+        const fileName = isProduction ? file.originalname : file.filename;
+        const fileData = {
             user_id,
-            name: file.originalname,
+            name: fileName,
             type: file.mimetype,
             size: file.size,
-            url: file.location || null
-        });
+            url: fileUrl
+        };
+        const fileUpload = await DB.Files.create(fileData);
         delete fileUpload.dataValues.pk;
         delete fileUpload.dataValues.name;
         delete fileUpload.dataValues.user_id;

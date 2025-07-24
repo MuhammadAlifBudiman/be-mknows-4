@@ -8,11 +8,13 @@ Object.defineProperty(exports, "FileController", {
         return FileController;
     }
 });
+const _path = /*#__PURE__*/ _interop_require_default(require("path"));
 const _expressasynchandler = /*#__PURE__*/ _interop_require_default(require("express-async-handler"));
 const _typedi = require("typedi");
 const _filesservice = require("../services/files.service");
 const _apiResponse = require("../utils/apiResponse");
 const _HttpException = require("../exceptions/HttpException");
+const _index = require("../config/index");
 function _define_property(obj, key, value) {
     if (key in obj) {
         Object.defineProperty(obj, key, {
@@ -38,7 +40,6 @@ let FileController = class FileController {
             const image = req.file;
             const user_id = req.user.pk;
             if (!image) throw new _HttpException.HttpException(false, 400, "File is required");
-            console.log(image);
             const response = await this.file.uploadSingleFile(user_id, image);
             res.status(201).json((0, _apiResponse.apiResponse)(201, "OK", "Upload Success", response));
         }));
@@ -48,7 +49,12 @@ let FileController = class FileController {
             if (!file || !file.url) {
                 throw new _HttpException.HttpException(false, 400, "File is not found");
             }
-            res.redirect(file.url);
+            if (_index.NODE_ENV === 'production') {
+                res.redirect(file.url);
+            } else {
+                const filepath = _path.default.join(process.cwd(), `./uploads/${file.name}`);
+                res.sendFile(filepath);
+            }
         }));
         _define_property(this, "getFileMine", (0, _expressasynchandler.default)(async (req, res, next)=>{
             const user_id = req.user.pk;

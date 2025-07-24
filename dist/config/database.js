@@ -22,7 +22,15 @@ module.exports = {
         },
         logQueryParameters: NODE_ENV === "development",
         logging: false,
-        benchmark: false
+        benchmark: false,
+        ssl: true,
+        dialectOptions: {
+            ssl: {
+                require: true,
+                rejectUnauthorized: false
+            },
+            sslmode: "require"
+        }
     },
     production: {
         dialect: "postgres",
@@ -46,7 +54,8 @@ module.exports = {
             ssl: {
                 require: true,
                 rejectUnauthorized: false
-            }
+            },
+            sslmode: "require"
         }
     }
 };

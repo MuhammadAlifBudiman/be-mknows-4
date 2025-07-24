@@ -1,3 +1,7 @@
+/**
+ * Sequelize model definition for article comments.
+ * Represents comments made by users on articles, including associations and scopes.
+ */
 // src/models/article-comments.model.ts
 import { Sequelize, DataTypes, Model, Optional } from "sequelize";
 import { Comment } from "@/interfaces/comment.interface";
@@ -7,26 +11,38 @@ import { User } from "@/interfaces/user.interface";
 import { Article } from "@/interfaces/article.interface";
 import { ArticleModel } from "./articles.model";
 
+/**
+ * Type for article comment creation attributes, omitting pk and uuid for auto-generation.
+ */
 export type ArticleCommentCreationAttributes = Optional<Comment, "pk" | "uuid">;
 
+/**
+ * ArticleCommentModel class for Sequelize ORM.
+ * Implements Comment interface and adds associations and timestamp fields.
+ */
 export class ArticleCommentModel extends Model<Comment, ArticleCommentCreationAttributes> implements Comment {
-  public pk: number;
-  public uuid: string;
-  public article_id: number;
-  public author_id: number;
-  public comment: string;
+  public pk: number;              // Primary key
+  public uuid: string;            // Unique identifier
+  public article_id: number;      // Associated article ID
+  public author_id: number;       // Author's user ID
+  public comment: string;         // Comment text
 
-  public readonly article: Article
-  public readonly author: User;
+  public readonly article: Article; // Associated article object
+  public readonly author: User;     // Associated author object
 
-  public replies: number;
-  public likes: number;
+  public replies: number;         // Number of replies
+  public likes: number;           // Number of likes
 
-  public readonly created_at!: Date;
-  public readonly updated_at!: Date;
-  public readonly deleted_at: Date;
+  public readonly created_at!: Date; // Timestamp for creation
+  public readonly updated_at!: Date; // Timestamp for last update
+  public readonly deleted_at: Date;  // Timestamp for deletion (paranoid)
 }
 
+/**
+ * Initializes the ArticleCommentModel with Sequelize instance and sets up associations and scopes.
+ * @param sequelize - Sequelize connection instance
+ * @returns ArticleCommentModel class
+ */
 export default function (sequelize: Sequelize): typeof ArticleCommentModel {
   ArticleCommentModel.init(
     {
@@ -53,10 +69,10 @@ export default function (sequelize: Sequelize): typeof ArticleCommentModel {
       },
     },
     {
-      tableName: "articles_comments",
-      timestamps: true,
-      paranoid: true,
-      sequelize,
+      tableName: "articles_comments", // Table name in DB
+      timestamps: true,                // Enable created_at/updated_at
+      paranoid: true,                  // Enable soft deletes (deleted_at)
+      sequelize,                       // Sequelize instance
       defaultScope: {
         include: [
           {
@@ -81,6 +97,7 @@ export default function (sequelize: Sequelize): typeof ArticleCommentModel {
     },
   );
 
+  // Set up associations
   ArticleModel.hasMany(ArticleCommentModel, { foreignKey: "article_id", as: "comments" });
   ArticleCommentModel.belongsTo(ArticleModel, { foreignKey: "article_id", as: "article" });
   ArticleCommentModel.belongsTo(UserModel, { foreignKey: "author_id", as: "author" });
